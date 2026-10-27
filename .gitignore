@@ -1,6 +1,8 @@
 # Maven
 target/
 
+.vscode/
+
 # Java
 *.class
 *.log
