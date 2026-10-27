@@ -18,15 +18,15 @@ Como cenário de aplicação, o projeto considera redes como sistemas de transpo
 
 O grafo é representado por uma lista de adjacência e utiliza as seguintes classes:
 
-- **\`Graph\`**: gerencia os nós, as arestas e suas conexões.
-- **\`Node\`**: representa um nó identificado por um ID.
-- **\`Edge\`**: representa uma conexão entre dois nós, com identificador e peso.
+- **`Graph`**: gerencia os nós, as arestas e suas conexões.
+- **`Node`**: representa um nó identificado por um ID.
+- **`Edge`**: representa uma conexão entre dois nós, com identificador e peso.
 
 A modelagem atual representa grafos não direcionados e ponderados. Os pesos devem ser finitos e não negativos. A estrutura permite arestas paralelas e não permite laços (arestas que conectam um nó a ele próprio).
 
 ### Caminhos mínimos — Dijkstra
 
-A classe \`Dijkstra\` implementa o algoritmo de Dijkstra utilizando uma fila de prioridade (\`PriorityQueue\`).
+A classe `Dijkstra` implementa o algoritmo de Dijkstra utilizando uma fila de prioridade (`PriorityQueue`).
 
 O algoritmo pode:
 
@@ -35,16 +35,16 @@ O algoritmo pode:
 - Calcular o custo total do caminho.
 - Informar quando não existe uma rota entre os nós selecionados.
 
-Os resultados são representados por \`RouteResult\`.
+Os resultados são representados por `RouteResult`.
 
 ### Análise de conectividade — Tarjan
 
-A classe \`TarjanAnalysis\` utiliza busca em profundidade (DFS), tempos de descoberta e valores *low-link* para identificar elementos críticos da rede:
+A classe `TarjanAnalysis` utiliza busca em profundidade (DFS), tempos de descoberta e valores *low-link* para identificar elementos críticos da rede:
 
 - **Pontes (*bridges*)**: arestas cuja remoção aumenta o número de componentes conexos.
 - **Pontos de articulação (*articulation points*)**: nós cuja remoção aumenta o número de componentes conexos.
 
-Os resultados são representados por \`CriticalElementsResult\`.
+Os resultados são representados por `CriticalElementsResult`.
 
 ## Tecnologias
 
@@ -54,7 +54,7 @@ Os resultados são representados por \`CriticalElementsResult\`.
 
 ## Estrutura do projeto
 
-\`\`\`text
+```text
 net-resilience/
 ├── pom.xml
 ├── README.md
@@ -81,7 +81,7 @@ net-resilience/
         │       └── DijkstraTest.java
         └── model/graph/
             └── GraphTest.java
-\`\`\`
+```
 
 ## Como executar
 
@@ -92,20 +92,20 @@ net-resilience/
 
 ### Clonar o repositório
 
-\`\`\`bash
+```bash
 git clone https://github.com/HenriqueFestraits/net-resilience.git
 cd net-resilience
-\`\`\`
+```
 
 ### Executar os testes
 
 Na raiz do projeto, execute:
 
-\`\`\`bash
+```bash
 mvn test
-\`\`\`
+```
 
-O Maven compila o código e executa os testes automatizados. Os relatórios ficam disponíveis em \`target/surefire-reports/\`.
+O Maven compila o código e executa os testes automatizados. Os relatórios ficam disponíveis em `target/surefire-reports/`.
 
 ## Próximas etapas
 
