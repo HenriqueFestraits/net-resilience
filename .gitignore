@@ -1,0 +1,20 @@
+# Maven
+target/
+
+# Java
+*.class
+*.log
+hs_err_pid*
+
+# IDEs
+.idea/
+*.iml
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Configurações e segredos locais
+.env
+.env.*
+!.env.example
