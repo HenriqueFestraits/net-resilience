@@ -24,8 +24,8 @@ public class RouteResult {
             throw new IllegalArgumentException("A route must have exactly one edge between each pair of consecutive nodes");
         }
 
-        this.nodes = nodes;
-        this.edges = edges;
+        this.nodes = List.copyOf(nodes);
+        this.edges = List.copyOf(edges);
         
         double calculatedWeight = 0.0;
 
