@@ -1,7 +1,6 @@
 
 package com.henrique.netresilience.service;
 
-import com.henrique.netresilience.model.graph.Edge;
 import com.henrique.netresilience.model.graph.Graph;
 
 import com.henrique.netresilience.model.result.FailureSimulationResult;
