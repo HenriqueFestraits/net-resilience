@@ -12,6 +12,7 @@ import com.henrique.netresilience.model.graph.Node;
 import com.henrique.netresilience.model.result.ConnectedComponentsResult;
 import com.henrique.netresilience.model.result.CriticalElementsResult;
 import com.henrique.netresilience.model.result.FailureSimulationResult;
+import com.henrique.netresilience.model.result.NetworkResilienceMetrics;
 import com.henrique.netresilience.model.result.RouteResult;
 import com.henrique.netresilience.model.scenario.FailureScenario;
 
@@ -63,6 +64,23 @@ public final class FailureSimulationService {
 
         CriticalElementsResult affectedCriticalElements = tarjanAnalysis.analyze(affectedGraph);
 
+        int largestAffectedComponentsSize =
+            affectedComponents.getComponents()
+                .stream()
+                .mapToInt(component -> component.size())
+                .max()
+                .orElse(0);
+
+        NetworkResilienceMetrics resilienceMetrics = new NetworkResilienceMetrics(
+            graph.nodeCount(),
+            affectedGraph.nodeCount(),
+            graph.edgeCount(),
+            affectedGraph.edgeCount(),
+            originalComponents.getComponentCount(),
+            affectedComponents.getComponentCount(),
+            largestAffectedComponentsSize
+        );
+
         //4. Consolidade all results
         return new FailureSimulationResult(
             sourceNodeId,
@@ -74,7 +92,8 @@ public final class FailureSimulationService {
             originalCriticalElements,
             affectedCriticalElements,
             scenario.getUnavailableNodeIds(),
-            scenario.getUnavailableEdgeIds()
+            scenario.getUnavailableEdgeIds(),
+            resilienceMetrics
         );
     }
 

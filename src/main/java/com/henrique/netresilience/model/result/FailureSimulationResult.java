@@ -24,6 +24,8 @@ public final class FailureSimulationResult {
     private final Set<String> unavailableNodeIds;
     private final Set<String> unavailableEdgeIds;
 
+    private final NetworkResilienceMetrics resilienceMetrics;
+
     public FailureSimulationResult(
         String sourceNodeId,
         String targetNodeId,
@@ -34,31 +36,33 @@ public final class FailureSimulationResult {
         CriticalElementsResult originalCriticalElements,
         CriticalElementsResult affectedCriticalElements,
         Set<String> unavailableNodeIds,
-        Set<String> unavailableEdgeIds
-        ){
-            this.sourceNodeId = validateId(sourceNodeId, "Source node");
-            this.targetNodeId = validateId(targetNodeId, "Target node");
-            this.originalRoute = Objects.requireNonNull(originalRoute, "Original route cannot be null");
-            this.affectedRoute = Objects.requireNonNull(affectedRoute, "Affected route cannot be null");
-            this.originalComponents = Objects.requireNonNull(originalComponents, "Original components cannot be null");
-            this.affectedComponents = Objects.requireNonNull(affectedComponents, "Affected components cannot be null");
-            this.originalCriticalElements = Objects.requireNonNull(originalCriticalElements, "Original critical elements cannot be null");
-            this.affectedCriticalElements = Objects.requireNonNull(affectedCriticalElements, "Affected critical elements cannot be null");
+        Set<String> unavailableEdgeIds,
+        NetworkResilienceMetrics resilienceMetrics
+    ){
+        this.sourceNodeId = validateId(sourceNodeId, "Source node");
+        this.targetNodeId = validateId(targetNodeId, "Target node");
+        this.originalRoute = Objects.requireNonNull(originalRoute, "Original route cannot be null");
+        this.affectedRoute = Objects.requireNonNull(affectedRoute, "Affected route cannot be null");
+        this.originalComponents = Objects.requireNonNull(originalComponents, "Original components cannot be null");
+        this.affectedComponents = Objects.requireNonNull(affectedComponents, "Affected components cannot be null");            this.originalCriticalElements = Objects.requireNonNull(originalCriticalElements, "Original critical elements cannot be null");
+        this.affectedCriticalElements = Objects.requireNonNull(affectedCriticalElements, "Affected critical elements cannot be null");
 
-            validateRouteEndpoints(this.originalRoute, "Original route");
-            validateRouteEndpoints(this.affectedRoute, "Affected route");
+        validateRouteEndpoints(this.originalRoute, "Original route");
+        validateRouteEndpoints(this.affectedRoute, "Affected route");
 
-            this.unavailableNodeIds = copyIds(unavailableNodeIds, "Node");
-            this.unavailableEdgeIds = copyIds(unavailableEdgeIds, "Edge");
-        }
+        this.unavailableNodeIds = copyIds(unavailableNodeIds, "Node");
+        this.unavailableEdgeIds = copyIds(unavailableEdgeIds, "Edge");
 
-        public String getSourceNodeId() {
-            return sourceNodeId;
-        }
+        this.resilienceMetrics = Objects.requireNonNull(resilienceMetrics, "Resilience metrics cannot be null");
+    }
+
+    public String getSourceNodeId() {
+        return sourceNodeId;
+    }
         
-        public String getTargetNodeId() {
-            return targetNodeId;
-        }
+    public String getTargetNodeId() {
+        return targetNodeId;
+    }
 
     public Optional<RouteResult> getOriginalRoute() {
         return originalRoute;
@@ -90,6 +94,10 @@ public final class FailureSimulationResult {
 
     public Set<String> getUnavailableEdgeIds() {
         return unavailableEdgeIds;
+    }
+
+    public NetworkResilienceMetrics getResilienceMetrics() {
+        return resilienceMetrics;
     }
 
     public boolean isRouteAvailableBefore() {
@@ -138,5 +146,28 @@ public final class FailureSimulationResult {
             throw new IllegalArgumentException(type + " ID cannot be null or blank");
         }
         return id;
+    }
+
+    public OptionalDouble getRouteCostChangePercentage(){
+
+        if(originalRoute.isEmpty() || affectedRoute.isEmpty()){
+            return OptionalDouble.empty();
+        }
+
+        double originalCost = originalRoute.get().getTotalWeight();
+
+        if(originalCost == 0.0){
+            return OptionalDouble.empty();
+        }
+
+        double difference = affectedRoute.get().getTotalWeight() - originalCost;
+
+        double percentage = (difference / originalCost) * 100.0;
+
+        if(!Double.isFinite(percentage)){
+            return OptionalDouble.empty();
+        }
+
+        return OptionalDouble.of(percentage);
     }
 }

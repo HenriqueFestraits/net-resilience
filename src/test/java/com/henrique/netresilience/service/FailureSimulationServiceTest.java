@@ -5,6 +5,7 @@ import com.henrique.netresilience.model.graph.Graph;
 
 import com.henrique.netresilience.model.result.FailureSimulationResult;
 import com.henrique.netresilience.model.result.RouteResult;
+import com.henrique.netresilience.model.result.NetworkResilienceMetrics;
 
 import com.henrique.netresilience.model.scenario.FailureScenario;
 
@@ -21,6 +22,7 @@ class FailureSimulationServiceTest {
 
     @Test
     void shouldPreserveResultsWhenScenarioHasNoFailures() {
+
         Graph graph = createDiamondGraph();
 
         FailureScenario scenario = new FailureScenario();
@@ -45,12 +47,49 @@ class FailureSimulationServiceTest {
                 0.0001
         );
 
+        assertEquals(
+                0.0,
+                result.getRouteCostChangePercentage().orElseThrow(),
+                0.0001
+        );
+
         assertEquals(1, result.getOriginalComponents().getComponentCount());
         assertEquals(1, result.getAffectedComponents().getComponentCount());
+
+        NetworkResilienceMetrics metrics = result.getResilienceMetrics();
+
+        assertEquals(4, metrics.getOriginalNodeCount());
+        assertEquals(4, metrics.getAvailableNodeCount());
+
+        assertEquals(4, metrics.getOriginalEdgeCount());
+        assertEquals(4, metrics.getAvailableEdgeCount());
+
+        assertEquals(4, metrics.getLargestAffectedComponentSize());
+
+        assertEquals(
+                100.0,
+                metrics.getNodeAvailabilityPercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(
+                100.0,
+                metrics.getEdgeAvailabilityPercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(
+                100.0,
+                metrics.getLargestComponentCoveragePercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(0, metrics.getComponentCountChange());
     }
 
     @Test
     void shouldFindAlternativeRouteAfterEdgeFailure() {
+
         Graph graph = createDiamondGraph();
 
         FailureScenario scenario = new FailureScenario();
@@ -83,11 +122,47 @@ class FailureSimulationServiceTest {
                 0.0001
         );
 
+        assertEquals(
+                100.0,
+                result.getRouteCostChangePercentage().orElseThrow(),
+                0.0001
+        );
+
         assertTrue(result.isRouteAvailableAfter());
+
+        // Resilience metrics
+        NetworkResilienceMetrics metrics = result.getResilienceMetrics();
+
+        assertEquals(4, metrics.getOriginalNodeCount());
+        assertEquals(4, metrics.getAvailableNodeCount());
+
+        assertEquals(4, metrics.getOriginalEdgeCount());
+        assertEquals(3, metrics.getAvailableEdgeCount());
+
+        assertEquals(
+                75.0,
+                metrics.getEdgeAvailabilityPercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(
+                100.0,
+                metrics.getNodeAvailabilityPercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(
+                100.0,
+                metrics.getLargestComponentCoveragePercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(0, metrics.getComponentCountChange());
     }
 
     @Test
     void shouldIdentifyDisconnectedComponentsAfterEdgeFailure() {
+
         Graph graph = createLineGraph();
 
         FailureScenario scenario = new FailureScenario();
@@ -104,10 +179,39 @@ class FailureSimulationServiceTest {
         assertEquals(2, result.getAffectedComponents().getComponentCount());
 
         assertTrue(result.getRouteCostDifference().isEmpty());
+        assertTrue(result.getRouteCostChangePercentage().isEmpty());
+
+        NetworkResilienceMetrics metrics = result.getResilienceMetrics();
+
+        assertEquals(3, metrics.getAvailableNodeCount());
+        assertEquals(1, metrics.getAvailableEdgeCount());
+
+        assertEquals(2, metrics.getLargestAffectedComponentSize());
+
+        assertEquals(
+                50.0,
+                metrics.getEdgeAvailabilityPercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(
+                100.0,
+                metrics.getNodeAvailabilityPercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(
+                200.0 / 3.0,
+                metrics.getLargestComponentCoveragePercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(1, metrics.getComponentCountChange());
     }
 
     @Test
     void shouldRemoveFailedNodeAndItsIncidentEdges() {
+
         Graph graph = createDiamondGraph();
 
         FailureScenario scenario = new FailureScenario();
@@ -131,10 +235,36 @@ class FailureSimulationServiceTest {
         );
 
         assertEquals(1, result.getAffectedComponents().getComponentCount());
+
+        NetworkResilienceMetrics metrics = result.getResilienceMetrics();
+
+        assertEquals(3, metrics.getAvailableNodeCount());
+        assertEquals(2, metrics.getAvailableEdgeCount());
+
+        assertEquals(
+                75.0,
+                metrics.getNodeAvailabilityPercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(
+                50.0,
+                metrics.getEdgeAvailabilityPercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(
+                75.0,
+                metrics.getLargestComponentCoveragePercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(0, metrics.getComponentCountChange());
     }
 
     @Test
     void shouldReturnNoRouteWhenSourceIsUnavailable() {
+
         Graph graph = createLineGraph();
 
         FailureScenario scenario = new FailureScenario();
@@ -149,10 +279,30 @@ class FailureSimulationServiceTest {
         assertTrue(result.isRouteLost());
 
         assertEquals(1, result.getAffectedComponents().getComponentCount());
+
+        NetworkResilienceMetrics metrics = result.getResilienceMetrics();
+
+        assertEquals(2, metrics.getAvailableNodeCount());
+        assertEquals(1, metrics.getAvailableEdgeCount());
+
+        assertEquals(
+                200.0 / 3.0,
+                metrics.getNodeAvailabilityPercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(
+                50.0,
+                metrics.getEdgeAvailabilityPercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(2, metrics.getLargestAffectedComponentSize());
     }
 
     @Test
     void shouldReturnNoRouteWhenTargetIsUnavailable() {
+
         Graph graph = createLineGraph();
 
         FailureScenario scenario = new FailureScenario();
@@ -165,10 +315,30 @@ class FailureSimulationServiceTest {
         assertTrue(result.isRouteAvailableBefore());
         assertFalse(result.isRouteAvailableAfter());
         assertTrue(result.isRouteLost());
+
+        NetworkResilienceMetrics metrics = result.getResilienceMetrics();
+
+        assertEquals(2, metrics.getAvailableNodeCount());
+        assertEquals(1, metrics.getAvailableEdgeCount());
+
+        assertEquals(
+                200.0 / 3.0,
+                metrics.getNodeAvailabilityPercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(
+                50.0,
+                metrics.getEdgeAvailabilityPercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(1, metrics.getAffectedComponentCount());
     }
 
     @Test
     void shouldRejectUnknownNodeInScenario() {
+
         Graph graph = createLineGraph();
 
         FailureScenario scenario = new FailureScenario();
@@ -182,6 +352,7 @@ class FailureSimulationServiceTest {
 
     @Test
     void shouldRejectUnknownEdgeInScenario() {
+
         Graph graph = createLineGraph();
 
         FailureScenario scenario = new FailureScenario();
@@ -195,12 +366,15 @@ class FailureSimulationServiceTest {
 
     @Test
     void shouldNotModifyOriginalGraphDuringSimulation() {
+
         Graph graph = createDiamondGraph();
 
         FailureScenario scenario = new FailureScenario();
         scenario.addUnavailableNode("B");
 
-        service.simulate(graph, "A", "D", scenario);
+        FailureSimulationResult result = service.simulate(
+                graph, "A", "D", scenario
+        );
 
         // Original graph must remain unchanged.
         assertEquals(4, graph.nodeCount());
@@ -208,9 +382,69 @@ class FailureSimulationServiceTest {
 
         assertTrue(graph.findNode("B").isPresent());
         assertTrue(graph.findEdge("E1").isPresent());
+
+        // The simulation must use an affected graph.
+        assertEquals(
+                3,
+                result.getResilienceMetrics().getAvailableNodeCount()
+        );
+
+        assertEquals(
+                2,
+                result.getResilienceMetrics().getAvailableEdgeCount()
+        );
+    }
+
+    @Test
+    void shouldCalculateMetricsForMultipleSimultaneousFailures() {
+
+        Graph graph = createDiamondGraph();
+
+        FailureScenario scenario = new FailureScenario();
+
+        scenario.addUnavailableNode("B");
+        scenario.addUnavailableEdge("E3");
+
+        FailureSimulationResult result = service.simulate(
+                graph, "A", "D", scenario
+        );
+
+        assertTrue(result.isRouteLost());
+        assertTrue(result.getAffectedRoute().isEmpty());
+
+        NetworkResilienceMetrics metrics = result.getResilienceMetrics();
+
+        // B removes E1 and E2 implicitly.
+        // E3 is also explicitly unavailable.
+        assertEquals(3, metrics.getAvailableNodeCount());
+        assertEquals(1, metrics.getAvailableEdgeCount());
+
+        assertEquals(2, metrics.getAffectedComponentCount());
+        assertEquals(2, metrics.getLargestAffectedComponentSize());
+
+        assertEquals(
+                75.0,
+                metrics.getNodeAvailabilityPercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(
+                25.0,
+                metrics.getEdgeAvailabilityPercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(
+                50.0,
+                metrics.getLargestComponentCoveragePercentage().orElseThrow(),
+                0.0001
+        );
+
+        assertEquals(1, metrics.getComponentCountChange());
     }
 
     private Graph createLineGraph() {
+
         Graph graph = new Graph();
 
         graph.addNode("A", "Node A");
@@ -224,6 +458,7 @@ class FailureSimulationServiceTest {
     }
 
     private Graph createDiamondGraph() {
+
         Graph graph = new Graph();
 
         graph.addNode("A", "Node A");

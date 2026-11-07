@@ -18,6 +18,7 @@ class FailureSimulationResultTest {
 
     @Test
     void shouldStoreSimulationResultsAndCalculateCostDifference() {
+
         FailureSimulationResult result = createResult(
                 true,
                 Set.of("B"),
@@ -43,6 +44,12 @@ class FailureSimulationResultTest {
                 0.0001
         );
 
+        assertEquals(
+                50.0,
+                result.getRouteCostChangePercentage().orElseThrow(),
+                0.0001
+        );
+
         assertTrue(result.isRouteAvailableBefore());
         assertTrue(result.isRouteAvailableAfter());
         assertFalse(result.isRouteLost());
@@ -50,10 +57,11 @@ class FailureSimulationResultTest {
 
     @Test
     void shouldIdentifyWhenRouteIsLostAfterFailure() {
+
         FailureSimulationResult result = createResult(
                 false,
                 Set.of("B"),
-                Set.of("E2")
+                Set.of("E2", "E3")
         );
 
         assertTrue(result.isRouteAvailableBefore());
@@ -62,10 +70,20 @@ class FailureSimulationResultTest {
 
         assertTrue(result.getAffectedRoute().isEmpty());
         assertTrue(result.getRouteCostDifference().isEmpty());
+        assertTrue(result.getRouteCostChangePercentage().isEmpty());
+
+        NetworkResilienceMetrics metrics =
+                result.getResilienceMetrics();
+
+        assertEquals(2, metrics.getAvailableNodeCount());
+        assertEquals(0, metrics.getAvailableEdgeCount());
+        assertEquals(2, metrics.getAffectedComponentCount());
+        assertEquals(1, metrics.getLargestAffectedComponentSize());
     }
 
     @Test
     void shouldKeepIndependentCopiesOfFailureIds() {
+
         Set<String> unavailableNodes = new LinkedHashSet<>();
         Set<String> unavailableEdges = new LinkedHashSet<>();
 
@@ -94,6 +112,7 @@ class FailureSimulationResultTest {
 
     @Test
     void shouldPreventExternalModificationOfFailureIds() {
+
         FailureSimulationResult result = createResult(
                 true,
                 Set.of("B"),
@@ -113,6 +132,7 @@ class FailureSimulationResultTest {
 
     @Test
     void shouldRejectRoutesWithDifferentEndpoints() {
+
         Graph graph = new Graph();
 
         Node a = graph.addNode("A", "Node A");
@@ -126,6 +146,22 @@ class FailureSimulationResultTest {
                 List.of(edge)
         );
 
+        ConnectedComponentsResult components =
+                new ConnectedComponentsResult(
+                        List.of(
+                                List.of(a),
+                                List.of(b, c)
+                        )
+                );
+
+        NetworkResilienceMetrics metrics =
+                new NetworkResilienceMetrics(
+                        3, 3,
+                        1, 1,
+                        2, 2,
+                        2
+                );
+
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new FailureSimulationResult(
@@ -133,18 +169,20 @@ class FailureSimulationResultTest {
                         "C",
                         Optional.of(invalidRoute),
                         Optional.empty(),
-                        new ConnectedComponentsResult(List.of(List.of(a, b, c))),
-                        new ConnectedComponentsResult(List.of(List.of(a, b, c))),
+                        components,
+                        components,
                         new CriticalElementsResult(List.of(), List.of()),
                         new CriticalElementsResult(List.of(), List.of()),
                         Set.of(),
-                        Set.of()
+                        Set.of(),
+                        metrics
                 )
         );
     }
 
     @Test
     void shouldRejectInvalidSourceId() {
+
         assertThrows(
                 IllegalArgumentException.class,
                 () -> createResultWithInvalidSource()
@@ -156,6 +194,7 @@ class FailureSimulationResultTest {
             Set<String> unavailableNodes,
             Set<String> unavailableEdges
     ) {
+
         Graph graph = new Graph();
 
         Node a = graph.addNode("A", "Node A");
@@ -166,17 +205,21 @@ class FailureSimulationResultTest {
         Edge e2 = graph.addEdge("E2", "B", "C", 6.0);
         Edge e3 = graph.addEdge("E3", "A", "C", 15.0);
 
+        // Original route: A -> B -> C.
         RouteResult originalRoute = new RouteResult(
                 List.of(a, b, c),
                 List.of(e1, e2)
         );
 
+        // After B becomes unavailable, only A -> C remains.
         Optional<RouteResult> affectedRoute =
                 routeAvailableAfter
-                        ? Optional.of(new RouteResult(
-                                List.of(a, c),
-                                List.of(e3)
-                        ))
+                        ? Optional.of(
+                                new RouteResult(
+                                        List.of(a, c),
+                                        List.of(e3)
+                                )
+                        )
                         : Optional.empty();
 
         ConnectedComponentsResult originalComponents =
@@ -184,25 +227,45 @@ class FailureSimulationResultTest {
                         List.of(List.of(a, b, c))
                 );
 
+        // If B is unavailable:
+        // - If E3 remains available, A and C stay connected.
+        // - If E3 also fails, A and C become isolated.
         ConnectedComponentsResult affectedComponents =
                 routeAvailableAfter
                         ? new ConnectedComponentsResult(
-                                List.of(List.of(a, b, c))
+                                List.of(List.of(a, c))
                         )
                         : new ConnectedComponentsResult(
-                                List.of(List.of(a, b), List.of(c))
+                                List.of(
+                                        List.of(a),
+                                        List.of(c)
+                                )
                         );
 
+        // The original graph is a triangle, so it has no
+        // articulation points or bridges.
         CriticalElementsResult originalCriticalElements =
                 new CriticalElementsResult(
-                        List.of(b),
-                        List.of(e1, e2)
+                        List.of(),
+                        List.of()
                 );
 
         CriticalElementsResult affectedCriticalElements =
                 new CriticalElementsResult(
                         List.of(),
                         List.of()
+                );
+
+        // Calculate metrics according to the affected graph.
+        NetworkResilienceMetrics metrics =
+                new NetworkResilienceMetrics(
+                        3,
+                        2,
+                        3,
+                        routeAvailableAfter ? 1 : 0,
+                        1,
+                        routeAvailableAfter ? 1 : 2,
+                        routeAvailableAfter ? 2 : 1
                 );
 
         return new FailureSimulationResult(
@@ -215,26 +278,41 @@ class FailureSimulationResultTest {
                 originalCriticalElements,
                 affectedCriticalElements,
                 unavailableNodes,
-                unavailableEdges
+                unavailableEdges,
+                metrics
         );
     }
 
     private static void createResultWithInvalidSource() {
+
+        NetworkResilienceMetrics metrics =
+                new NetworkResilienceMetrics(
+                        1, 1,
+                        0, 0,
+                        1, 1,
+                        1
+                );
+
         new FailureSimulationResult(
-            null,
-            "C",
-            Optional.empty(),
-            Optional.empty(),
-            new ConnectedComponentsResult(List.of(
-                    List.of(new Node("A", "Node A"))
-            )),
-            new ConnectedComponentsResult(List.of(
-                    List.of(new Node("A", "Node A"))
-            )),
-            new CriticalElementsResult(List.of(), List.of()),
-            new CriticalElementsResult(List.of(), List.of()),
-            Set.of(),
-            Set.of()
+                null,
+                "C",
+                Optional.empty(),
+                Optional.empty(),
+                new ConnectedComponentsResult(
+                        List.of(
+                                List.of(new Node("A", "Node A"))
+                        )
+                ),
+                new ConnectedComponentsResult(
+                        List.of(
+                                List.of(new Node("A", "Node A"))
+                        )
+                ),
+                new CriticalElementsResult(List.of(), List.of()),
+                new CriticalElementsResult(List.of(), List.of()),
+                Set.of(),
+                Set.of(),
+                metrics
         );
     }
 }
