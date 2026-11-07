@@ -11,10 +11,10 @@ Como cenário de aplicação, o projeto considera redes como sistemas de transpo
 A classe `Graph` representa um grafo **não direcionado e ponderado**, implementado com lista de adjacência.
 
 - **`Graph`**: gerencia os nós, as arestas e as relações entre eles.
-- **`Node`**: representa um nó identificado por ID e associado a um rótulo.
+- **`Node`**: representa um nó identificado por ID e associado a um rótulo. Também pode armazenar coordenadas visuais opcionais (`x` e `y`), usadas somente pela interface gráfica.
 - **`Edge`**: representa uma conexão identificada por ID, com origem, destino e peso.
 
-A estrutura permite arestas paralelas, não permite laços (uma aresta que conecta um nó a ele próprio) e exige pesos finitos e não negativos.
+A estrutura permite arestas paralelas, não permite laços (uma aresta que conecta um nó a ele próprio) e exige pesos finitos e não negativos. As coordenadas visuais dos nós são independentes dos pesos das arestas e não interferem nos algoritmos.
 
 ### Caminhos mínimos — Dijkstra
 
@@ -79,6 +79,44 @@ A classe `FailureSimulationResult` reúne:
 - Disponibilidade da rota e indicação de perda da rota.
 - Diferença entre o custo da rota afetada e o custo original, quando ambas existem.
 
+### Importação de redes por CSV
+
+A classe GraphCsvLoader importa a topologia da rede a partir de dois arquivos:
+
+- `nodes.csv`: ID, rótulo e, opcionalmente, coordenadas visuais dos nós.
+- `edges.csv`: ID, origem, destino e peso de cada aresta.
+
+O arquivo de nós aceita os cabeçalhos `id,label` e `id,label,x,y`. Consulte também o [guia de formato dos CSVs](data/CSV_FORMAT.md). Quando as coordenadas estão presentes, a interface usa o posicionamento definido no CSV. Quando estão ausentes, a visualização mantém o posicionamento circular automático.
+
+As coordenadas são valores numéricos relativos: X aumenta para a direita e Y aumenta para baixo. A interface ajusta escala e centralização para encaixar a rede na área disponível, preservando as proporções.
+
+Exemplo:
+
+```csv
+id,label,x,y
+A,Estação Central,400,300
+B,Estação Norte,230,120
+C,Estação Sul,230,480
+```
+
+O formato de edges.csv permanece:
+
+```csv
+id,source,target,weight
+E1,A,B,2.5
+E2,B,C,3.0
+```
+
+### Interface gráfica
+
+A interface utiliza JavaFX e a classe GraphCanvas para visualizar a rede importada. É possível selecionar nós e arestas para criar cenários de falha, escolher origem e destino, executar a simulação e visualizar as rotas e os indicadores de resiliência.
+
+Para iniciar a interface, execute:
+
+```bash
+mvn javafx:run
+```
+
 ### Demonstração pelo terminal
 
 A classe `SimulationDemo` monta uma rede de exemplo e executa dois cenários:
@@ -92,6 +130,7 @@ A demonstração também apresenta as rotas, os custos, os componentes conexos e
 
 - **Java 17**
 - **Apache Maven**
+- **JavaFX 17**
 - **JUnit 6**
 
 ## Estrutura do projeto
@@ -100,6 +139,10 @@ A demonstração também apresenta as rotas, os custos, os componentes conexos e
 net-resilience/
 ├── pom.xml
 ├── README.md
+├── data/
+│   ├── nodes.csv
+│   ├── edges.csv
+│   └── CSV_FORMAT.md
 └── src/
     ├── main/java/com/henrique/netresilience/
     │   ├── algorithm/
@@ -110,6 +153,8 @@ net-resilience/
     │   │       └── Dijkstra.java
     │   ├── demo/
     │   │   └── SimulationDemo.java
+    │   ├── io/
+    │   │   └── GraphCsvLoader.java
     │   ├── model/
     │   │   ├── graph/
     │   │   │   ├── Graph.java
@@ -122,8 +167,12 @@ net-resilience/
     │   │   │   └── RouteResult.java
     │   │   └── scenario/
     │   │       └── FailureScenario.java
-    │   └── service/
-    │       └── FailureSimulationService.java
+    │   ├── service/
+    │   │   └── FailureSimulationService.java
+    │   └── ui/
+    │       ├── NetResilienceApplication.java
+    │       └── component/
+    │           └── GraphCanvas.java
     └── test/java/com/henrique/netresilience/
         ├── algorithm/
         │   ├── connectivity/
@@ -131,6 +180,8 @@ net-resilience/
         │   │   └── TarjanAnalysisTest.java
         │   └── shortestpath/
         │       └── DijkstraTest.java
+        ├── io/
+        │   └── GraphCsvLoaderTest.java
         ├── model/
         │   ├── graph/
         │   │   └── GraphTest.java
@@ -184,9 +235,7 @@ java -cp target/classes com.henrique.netresilience.demo.SimulationDemo
 
 O projeto continua em desenvolvimento. Entre as próximas etapas planejadas estão:
 
-- Permitir a criação ou importação de redes a partir de arquivos.
 - Ampliar os indicadores para comparar o impacto de diferentes cenários de falha.
-- Desenvolver uma interface gráfica com JavaFX para visualizar a topologia, selecionar falhas e apresentar os resultados.
 - Expandir os cenários de demonstração e os testes automatizados.
 
 ## Contexto acadêmico

@@ -1,4 +1,3 @@
-
 package com.henrique.netresilience.ui.component;
 
 import java.util.HashMap;
@@ -31,6 +30,7 @@ public final class GraphCanvas extends Region {
 
     private static final double NODE_RADIUS = 23.0;
     private static final double EDGE_CLICK_TOLERANCE = 10.0;
+    private static final double POSITION_PADDING = NODE_RADIUS + 45.0;
 
     private static final Color BACKGROUND_COLOR =
             Color.web("#0f172a");
@@ -176,6 +176,102 @@ public final class GraphCanvas extends Region {
     }
 
     private Map<String, Point2D> calculatePositions(
+            List<Node> nodes,
+            double width,
+            double height
+    ) {
+
+        boolean allNodesHaveCoordinates = nodes.stream()
+                .allMatch(Node::hasPosition);
+
+        if (allNodesHaveCoordinates) {
+            return calculateCoordinatePositions(nodes, width, height);
+        }
+
+        // Compatibility fallback for graphs created without visual metadata.
+        return calculateCircularPositions(nodes, width, height);
+    }
+
+    /**
+     * Maps user-defined graph coordinates into the available canvas area.
+     *
+     * The mapping preserves the relative proportions between X and Y.
+     * Positive X points right and positive Y points down, matching JavaFX.
+     */
+    private Map<String, Point2D> calculateCoordinatePositions(
+            List<Node> nodes,
+            double width,
+            double height
+    ) {
+
+        Map<String, Point2D> positions = new HashMap<>();
+
+        double minX = Double.POSITIVE_INFINITY;
+        double maxX = Double.NEGATIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY;
+        double maxY = Double.NEGATIVE_INFINITY;
+
+        for (Node node : nodes) {
+
+            minX = Math.min(minX, node.getX());
+            maxX = Math.max(maxX, node.getX());
+
+            minY = Math.min(minY, node.getY());
+            maxY = Math.max(maxY, node.getY());
+        }
+
+        double rangeX = maxX - minX;
+        double rangeY = maxY - minY;
+
+        double availableWidth = Math.max(
+                1.0,
+                width - 2.0 * POSITION_PADDING
+        );
+
+        double availableHeight = Math.max(
+                1.0,
+                height - 2.0 * POSITION_PADDING
+        );
+
+        double scaleX = rangeX > 0.0
+                ? availableWidth / rangeX
+                : Double.POSITIVE_INFINITY;
+
+        double scaleY = rangeY > 0.0
+                ? availableHeight / rangeY
+                : Double.POSITIVE_INFINITY;
+
+        double scale = Math.min(scaleX, scaleY);
+
+        // A graph with a single unique coordinate needs no scaling.
+        if (!Double.isFinite(scale)) {
+            scale = 1.0;
+        }
+
+        double centerDataX = (minX + maxX) / 2.0;
+        double centerDataY = (minY + maxY) / 2.0;
+
+        double centerCanvasX = width / 2.0;
+        double centerCanvasY = height / 2.0;
+
+        for (Node node : nodes) {
+
+            double screenX = centerCanvasX
+                    + (node.getX() - centerDataX) * scale;
+
+            double screenY = centerCanvasY
+                    + (node.getY() - centerDataY) * scale;
+
+            positions.put(
+                    node.getId(),
+                    new Point2D(screenX, screenY)
+            );
+        }
+
+        return positions;
+    }
+
+    private Map<String, Point2D> calculateCircularPositions(
             List<Node> nodes,
             double width,
             double height
