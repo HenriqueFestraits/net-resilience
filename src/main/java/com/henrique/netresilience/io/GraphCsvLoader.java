@@ -109,38 +109,45 @@ public final class GraphCsvLoader {
                         lineNumber
                 );
 
-                try {
+                if (hasCoordinates) {
 
-                    if (hasCoordinates) {
+                    double x = parseCoordinate(
+                            fields.get(2).trim(),
+                            "x coordinate",
+                            file,
+                            lineNumber
+                    );
 
-                        double x = parseCoordinate(
-                                fields.get(2).trim(),
-                                "x coordinate",
-                                file,
-                                lineNumber
-                        );
+                    double y = parseCoordinate(
+                            fields.get(3).trim(),
+                            "y coordinate",
+                            file,
+                            lineNumber
+                    );
 
-                        double y = parseCoordinate(
-                                fields.get(3).trim(),
-                                "y coordinate",
-                                file,
-                                lineNumber
-                        );
-
+                    try {
                         graph.addNode(id, label, x, y);
-
-                    } else {
-
-                        graph.addNode(id, label);
+                    } catch (IllegalArgumentException e) {
+                        throw invalidCsv(
+                                file,
+                                lineNumber,
+                                e.getMessage(),
+                                e
+                        );
                     }
 
-                } catch (IllegalArgumentException e) {
-                    throw invalidCsv(
-                            file,
-                            lineNumber,
-                            e.getMessage(),
-                            e
-                    );
+                } else {
+
+                    try {
+                        graph.addNode(id, label);
+                    } catch (IllegalArgumentException e) {
+                        throw invalidCsv(
+                                file,
+                                lineNumber,
+                                e.getMessage(),
+                                e
+                        );
+                    }
                 }
             }
 
