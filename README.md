@@ -86,7 +86,7 @@ A classe GraphCsvLoader importa a topologia da rede a partir de dois arquivos:
 - `nodes.csv`: ID, rótulo e, opcionalmente, coordenadas visuais dos nós.
 - `edges.csv`: ID, origem, destino e peso de cada aresta.
 
-O arquivo de nós aceita os cabeçalhos `id,label` e `id,label,x,y`. Quando as coordenadas estão presentes, a interface usa o posicionamento definido no CSV. Quando estão ausentes, a visualização mantém o posicionamento circular automático.
+O arquivo de nós aceita os cabeçalhos `id,label` e `id,label,x,y`. Consulte também o [guia de formato dos CSVs](data/CSV_FORMAT.md). Quando as coordenadas estão presentes, a interface usa o posicionamento definido no CSV. Quando estão ausentes, a visualização mantém o posicionamento circular automático.
 
 As coordenadas são valores numéricos relativos: X aumenta para a direita e Y aumenta para baixo. A interface ajusta escala e centralização para encaixar a rede na área disponível, preservando as proporções.
 
@@ -116,6 +116,7 @@ Para iniciar a interface, execute:
 ```bash
 mvn javafx:run
 ```
+
 ### Demonstração pelo terminal
 
 A classe `SimulationDemo` monta uma rede de exemplo e executa dois cenários:
@@ -222,7 +223,6 @@ java -cp target/classes com.henrique.netresilience.demo.SimulationDemo
 
 O projeto continua em desenvolvimento. Entre as próximas etapas planejadas estão:
 
-- Permitir a criação ou importação de redes a partir de arquivos.
 - Ampliar os indicadores para comparar o impacto de diferentes cenários de falha.
 - Expandir os cenários de demonstração e os testes automatizados.
 
