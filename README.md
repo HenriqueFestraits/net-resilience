@@ -139,6 +139,10 @@ A demonstração também apresenta as rotas, os custos, os componentes conexos e
 net-resilience/
 ├── pom.xml
 ├── README.md
+├── data/
+│   ├── nodes.csv
+│   ├── edges.csv
+│   └── CSV_FORMAT.md
 └── src/
     ├── main/java/com/henrique/netresilience/
     │   ├── algorithm/
@@ -149,6 +153,8 @@ net-resilience/
     │   │       └── Dijkstra.java
     │   ├── demo/
     │   │   └── SimulationDemo.java
+    │   ├── io/
+    │   │   └── GraphCsvLoader.java
     │   ├── model/
     │   │   ├── graph/
     │   │   │   ├── Graph.java
@@ -161,8 +167,12 @@ net-resilience/
     │   │   │   └── RouteResult.java
     │   │   └── scenario/
     │   │       └── FailureScenario.java
-    │   └── service/
-    │       └── FailureSimulationService.java
+    │   ├── service/
+    │   │   └── FailureSimulationService.java
+    │   └── ui/
+    │       ├── NetResilienceApplication.java
+    │       └── component/
+    │           └── GraphCanvas.java
     └── test/java/com/henrique/netresilience/
         ├── algorithm/
         │   ├── connectivity/
@@ -170,6 +180,8 @@ net-resilience/
         │   │   └── TarjanAnalysisTest.java
         │   └── shortestpath/
         │       └── DijkstraTest.java
+        ├── io/
+        │   └── GraphCsvLoaderTest.java
         ├── model/
         │   ├── graph/
         │   │   └── GraphTest.java
