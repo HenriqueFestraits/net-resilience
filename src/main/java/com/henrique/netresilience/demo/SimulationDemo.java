@@ -1,8 +1,13 @@
 
 package com.henrique.netresilience.demo;
 
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import com.henrique.netresilience.io.GraphCsvLoader;
 
 import com.henrique.netresilience.model.graph.Edge;
 import com.henrique.netresilience.model.graph.Graph;
@@ -22,13 +27,28 @@ public final class SimulationDemo {
     private static final FailureSimulationService service =
             new FailureSimulationService();
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+
+        // Without arguments, execute the built-in demonstration.
+        if (args.length == 0) {
+            runBuiltInDemo();
+            return;
+        }
+
+        // With six arguments, load a graph from CSV files.
+        if (args.length != 6) {
+            printUsage();
+            return;
+        }
+
+        runCsvDemo(args);
+    }
+
+    private static void runBuiltInDemo() {
 
         Graph graph = createExampleGraph();
 
-        System.out.println("==========================================");
-        System.out.println("       NET RESILIENCE - DEMONSTRACAO");
-        System.out.println("==========================================");
+        printHeader("NET RESILIENCE - DEMONSTRACAO");
 
         printGraph(graph);
 
@@ -38,33 +58,173 @@ public final class SimulationDemo {
 
         runScenario(
                 graph,
+                "A",
+                "F",
                 "CENARIO 1 - FALHA DA CONEXAO E1",
                 scenario1
         );
 
-        // Scenario 2: Failure of a bridge, disconnecting the network.
+        // Scenario 2: Failure of a bridge.
         FailureScenario scenario2 = new FailureScenario();
         scenario2.addUnavailableEdge("E5");
 
         runScenario(
                 graph,
+                "A",
+                "F",
                 "CENARIO 2 - FALHA DA CONEXAO E5",
                 scenario2
         );
 
-        // Check that the original graph was not modified.
-        System.out.println("\n==========================================");
-        System.out.println("VERIFICACAO DA REDE ORIGINAL");
-        System.out.println("Nos: " + graph.nodeCount());
-        System.out.println("Conexoes: " + graph.edgeCount());
-        System.out.println("==========================================");
+        printOriginalGraphIntegrity(graph);
+    }
+
+    private static void runCsvDemo(String[] args) throws IOException {
+
+        Path nodesFile = Path.of(args[0]);
+        Path edgesFile = Path.of(args[1]);
+
+        String sourceId = args[2];
+        String targetId = args[3];
+
+        String failureType = args[4].toLowerCase(Locale.ROOT);
+        String failureId = args[5];
+
+        // Create the failure scenario.
+        FailureScenario scenario = new FailureScenario();
+
+        switch (failureType) {
+
+            case "node":
+                scenario.addUnavailableNode(failureId);
+                break;
+
+            case "edge":
+                scenario.addUnavailableEdge(failureId);
+                break;
+
+            default:
+                throw new IllegalArgumentException(
+                        "Failure type must be 'node' or 'edge'."
+                );
+        }
+
+        // Load the graph from CSV files.
+        GraphCsvLoader loader = new GraphCsvLoader();
+
+        Graph graph = loader.load(nodesFile, edgesFile);
+
+        printHeader("NET RESILIENCE - CSV IMPORT");
+
+        System.out.println("Arquivo de nos: " + nodesFile);
+        System.out.println("Arquivo de conexoes: " + edgesFile);
+
+        printGraph(graph);
+
+        String scenarioTitle =
+                "SIMULACAO - FALHA DE " +
+                failureType.toUpperCase(Locale.ROOT) +
+                " " + failureId;
+
+        runScenario(
+                graph,
+                sourceId,
+                targetId,
+                scenarioTitle,
+                scenario
+        );
+
+        printOriginalGraphIntegrity(graph);
+    }
+
+    private static void runScenario(
+            Graph graph,
+            String sourceId,
+            String targetId,
+            String title,
+            FailureScenario scenario
+    ) {
+
+        FailureSimulationResult result = service.simulate(
+                graph,
+                sourceId,
+                targetId,
+                scenario
+        );
+
+        printHeader(title);
+
+        System.out.println("Origem: " + sourceId);
+        System.out.println("Destino: " + targetId);
+
+        System.out.println(
+                "Nos indisponiveis: " +
+                result.getUnavailableNodeIds()
+        );
+
+        System.out.println(
+                "Conexoes indisponiveis: " +
+                result.getUnavailableEdgeIds()
+        );
+
+        // Routes
+        System.out.println("\n--- ROTAS ---");
+
+        printRoute("Rota original:", result.getOriginalRoute());
+
+        printRoute("Rota apos as falhas:", result.getAffectedRoute());
+
+        if (result.getRouteCostDifference().isPresent()) {
+
+            System.out.printf(
+                    "Variacao do custo: %+.2f%n",
+                    result.getRouteCostDifference().getAsDouble()
+            );
+
+        } else if (result.isRouteLost()) {
+
+            System.out.println(
+                    "A rota entre os pontos selecionados deixou de existir."
+            );
+        }
+
+        // Connected components
+        System.out.println("\n--- COMPONENTES CONEXOS ---");
+
+        System.out.println(
+                "Antes: " +
+                result.getOriginalComponents().getComponentCount()
+        );
+
+        printComponents(result.getOriginalComponents());
+
+        System.out.println(
+                "\nDepois: " +
+                result.getAffectedComponents().getComponentCount()
+        );
+
+        printComponents(result.getAffectedComponents());
+
+        // Critical elements
+        System.out.println("\n--- ELEMENTOS CRITICOS ---");
+
+        System.out.println("Antes das falhas:");
+
+        printCriticalElements(
+                result.getOriginalCriticalElements()
+        );
+
+        System.out.println("\nDepois das falhas:");
+
+        printCriticalElements(
+                result.getAffectedCriticalElements()
+        );
     }
 
     private static Graph createExampleGraph() {
 
         Graph graph = new Graph();
 
-        // Stations
         graph.addNode("A", "Station A");
         graph.addNode("B", "Station B");
         graph.addNode("C", "Station C");
@@ -72,7 +232,6 @@ public final class SimulationDemo {
         graph.addNode("E", "Station E");
         graph.addNode("F", "Station F");
 
-        // Connections (edges)
         graph.addEdge("E1", "A", "B", 2.0);
         graph.addEdge("E2", "B", "D", 2.0);
         graph.addEdge("E3", "A", "C", 4.0);
@@ -86,12 +245,14 @@ public final class SimulationDemo {
     private static void printGraph(Graph graph) {
 
         System.out.println("\nREDE ORIGINAL");
+
         System.out.println("Nos: " + graph.nodeCount());
         System.out.println("Conexoes: " + graph.edgeCount());
 
         System.out.println("\nConexoes cadastradas:");
 
         for (Edge edge : graph.getEdges()) {
+
             System.out.printf(
                     "  %s: %s <-> %s | Peso: %.2f%n",
                     edge.getId(),
@@ -100,83 +261,6 @@ public final class SimulationDemo {
                     edge.getWeight()
             );
         }
-    }
-
-    private static void runScenario(
-            Graph graph,
-            String title,
-            FailureScenario scenario
-    ) {
-
-        FailureSimulationResult result = service.simulate(
-                graph,
-                "A",
-                "F",
-                scenario
-        );
-
-        System.out.println("\n\n==========================================");
-        System.out.println(title);
-        System.out.println("==========================================");
-
-        System.out.println(
-                "Conexoes indisponiveis: " +
-                result.getUnavailableEdgeIds()
-        );
-
-        // Routes
-        System.out.println("\n--- ROTAS ---");
-
-        printRoute("Rota original:", result.getOriginalRoute());
-        printRoute("Rota apos as falhas:", result.getAffectedRoute());
-
-        if (result.getRouteCostDifference().isPresent()) {
-
-            System.out.printf(
-                    "Variacao do custo: %+.2f%n",
-                    result.getRouteCostDifference().getAsDouble()
-            );
-
-        } else if (result.isRouteLost()) {
-
-            System.out.println(
-                    "A rota entre A e F deixou de existir."
-            );
-        }
-
-        // Connected components
-        System.out.println("\n--- COMPONENTES CONEXOS ---");
-
-        System.out.println(
-                "Antes: " +
-                result.getOriginalComponents().getComponentCount()
-        );
-
-        printComponents(
-                result.getOriginalComponents()
-        );
-
-        System.out.println(
-                "\nDepois: " +
-                result.getAffectedComponents().getComponentCount()
-        );
-
-        printComponents(
-                result.getAffectedComponents()
-        );
-
-        // Critical elements
-        System.out.println("\n--- ELEMENTOS CRITICOS ---");
-
-        System.out.println("Antes das falhas:");
-        printCriticalElements(
-                result.getOriginalCriticalElements()
-        );
-
-        System.out.println("\nDepois das falhas:");
-        printCriticalElements(
-                result.getAffectedCriticalElements()
-        );
     }
 
     private static void printRoute(
@@ -230,10 +314,11 @@ public final class SimulationDemo {
             CriticalElementsResult result
     ) {
 
-        String articulationPoints = result.getArticulationPoints()
-                .stream()
-                .map(Node::getId)
-                .collect(Collectors.joining(", "));
+        String articulationPoints =
+                result.getArticulationPoints()
+                        .stream()
+                        .map(Node::getId)
+                        .collect(Collectors.joining(", "));
 
         String bridges = result.getBridges()
                 .stream()
@@ -254,6 +339,45 @@ public final class SimulationDemo {
         System.out.println(
                 "  Pontes: " +
                 (bridges.isEmpty() ? "Nenhuma" : bridges)
+        );
+    }
+
+    private static void printOriginalGraphIntegrity(Graph graph) {
+
+        System.out.println("\n==========================================");
+        System.out.println("VERIFICACAO DA REDE ORIGINAL");
+        System.out.println("Nos: " + graph.nodeCount());
+        System.out.println("Conexoes: " + graph.edgeCount());
+        System.out.println("==========================================");
+    }
+
+    private static void printHeader(String title) {
+
+        System.out.println("\n==========================================");
+        System.out.println("       " + title);
+        System.out.println("==========================================");
+    }
+
+    private static void printUsage() {
+
+        System.out.println("Uso:");
+
+        System.out.println(
+                "java -cp target/classes " +
+                "com.henrique.netresilience.demo.SimulationDemo " +
+                "<nodes.csv> <edges.csv> " +
+                "<sourceId> <targetId> <node|edge> <failureId>"
+        );
+
+        System.out.println("\nExemplo:");
+
+        System.out.println(
+                "data/nodes.csv data/edges.csv A F edge E1"
+        );
+
+        System.out.println(
+                "\nPara executar a demonstracao interna, " +
+                "execute sem argumentos."
         );
     }
 }
