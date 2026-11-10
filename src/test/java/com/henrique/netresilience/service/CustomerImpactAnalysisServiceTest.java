@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 
 import com.henrique.netresilience.model.graph.Graph;
 import com.henrique.netresilience.model.result.CustomerImpactResult;
-import com.henrique.netresilience.model.scenario.FailureScenario;
 
 class CustomerImpactAnalysisServiceTest {
 
@@ -33,23 +32,7 @@ class CustomerImpactAnalysisServiceTest {
         planned.addEdge("E5", "GW", "CTO-2", 5.0);
         planned.addEdge("E6", "GW", "CTO-3", 3.0);
 
-        FailureScenario scenario = new FailureScenario();
-        scenario.addUnavailableEdge("E2");
-
-        Graph operational = new Graph();
-        operational.addNode("GW", "Internet Gateway");
-        operational.addNode("A", "Primary route");
-        operational.addNode("B", "Alternative route");
-        operational.addNode("CTO-1", "CTO 1", 10);
-        operational.addNode("CTO-2", "CTO 2", 20);
-        operational.addNode("CTO-3", "CTO 3", 5);
-        operational.addEdge("E1", "GW", "A", 1.0);
-        operational.addEdge("E3", "GW", "B", 1.0);
-        operational.addEdge("E4", "B", "CTO-1", 3.0);
-        operational.addEdge("E5", "GW", "CTO-2", 5.0);
-        operational.addEdge("E6", "GW", "CTO-3", 3.0);
-
-        // Isolate CTO-3 as well, simulating a second unavailable link.
+        // Remove the primary path to CTO-1 and the only path to CTO-3.
         Graph withTwoFailures = new Graph();
         withTwoFailures.addNode("GW", "Internet Gateway");
         withTwoFailures.addNode("A", "Primary route");
