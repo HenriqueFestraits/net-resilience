@@ -64,9 +64,7 @@ public final class CustomerImpactAnalysisService {
             if (operationalRoute.isEmpty()) {
                 customersWithoutInternet += customers;
                 disconnectedAccessPoints++;
-                if (originalRoute.isPresent()) {
-                    affectedAccessPoints++;
-                }
+                affectedAccessPoints++;
                 continue;
             }
 
