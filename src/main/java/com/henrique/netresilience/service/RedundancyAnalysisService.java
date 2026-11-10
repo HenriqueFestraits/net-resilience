@@ -65,9 +65,9 @@ public final class RedundancyAnalysisService {
         Graph copy = new Graph();
         for (Node node : source.getNodes()) {
             if (node.hasPosition()) {
-                copy.addNode(node.getId(), node.getLabel(), node.getX(), node.getY());
+                copy.addNode(node.getId(), node.getLabel(), node.getDependentDevices(), node.getX(), node.getY());
             } else {
-                copy.addNode(node.getId(), node.getLabel());
+                copy.addNode(node.getId(), node.getLabel(), node.getDependentDevices());
             }
         }
         for (Edge edge : source.getEdges()) {
