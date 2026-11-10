@@ -861,13 +861,13 @@ public final class NetResilienceApplication extends Application {
                 ))
                 .append("\n");
 
-        output.append("Conexões disponíveis: ")
+        output.append( "Enlaces disponíveis: ")
                 .append(metrics.getAvailableEdgeCount())
                 .append("/")
                 .append(metrics.getOriginalEdgeCount())
                 .append("\n");
 
-        output.append("Disponibilidade de conexões: ")
+        output.append( "Disponibilidade de enlaces: ")
                 .append(formatPercentage(
                         metrics.getEdgeAvailabilityPercentage()
                 ))
