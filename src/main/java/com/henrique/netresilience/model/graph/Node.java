@@ -5,6 +5,7 @@ public class Node {
     private final String id;
     private final String label;
     private final int dependentDevices;
+    private final boolean dependentDevicesProvided;
 
     private final double x;
     private final double y;
@@ -14,6 +15,7 @@ public class Node {
         this.id = id;
         this.label = label;
         this.dependentDevices = 0;
+        this.dependentDevicesProvided = false;
 
         this.x = 0.0;
         this.y = 0.0;
@@ -25,6 +27,7 @@ public class Node {
         this.id = id;
         this.label = label;
         this.dependentDevices = dependentDevices;
+        this.dependentDevicesProvided = true;
         this.x = 0.0;
         this.y = 0.0;
         this.hasPosition = false;
@@ -68,6 +71,10 @@ public class Node {
 
     public int getDependentDevices() {
         return dependentDevices;
+    }
+
+    public boolean hasDependentDeviceCount() {
+        return dependentDevicesProvided;
     }
 
     /**
