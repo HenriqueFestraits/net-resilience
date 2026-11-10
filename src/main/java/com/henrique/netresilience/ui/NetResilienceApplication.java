@@ -645,6 +645,7 @@ public final class NetResilienceApplication extends Application {
                 Set.of(),
                 Set.of()
         );
+        graphCanvas.clearHypotheticalConnection();
 
         updateFailureSelection();
 
@@ -864,13 +865,13 @@ public final class NetResilienceApplication extends Application {
                 ))
                 .append("\n");
 
-        output.append( "Enlaces disponíveis: ")
+        output.append("Enlaces disponíveis: ")
                 .append(metrics.getAvailableEdgeCount())
                 .append("/")
                 .append(metrics.getOriginalEdgeCount())
                 .append("\n");
 
-        output.append( "Disponibilidade de enlaces: ")
+        output.append("Disponibilidade de enlaces: ")
                 .append(formatPercentage(
                         metrics.getEdgeAvailabilityPercentage()
                 ))
