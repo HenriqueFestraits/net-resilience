@@ -22,12 +22,12 @@ D-02,Caixa de distribuição Sul,85,220,450
 
 - `id`: identificador único do equipamento.
 - `label`: nome apresentado na interface.
-- `dependent_devices`: quantidade de dispositivos que dependem daquele ponto, incluindo os que são atendidos pela ramificação abaixo dele, conforme o levantamento operacional fornecido. Deve ser um inteiro não negativo.
+- `dependent_devices`: quantidade de dispositivos diretamente associados ao ponto. Para evitar dupla contagem, não inclua clientes já contabilizados em outros vértices. Deve ser um inteiro não negativo.
 - `x` e `y`: coordenadas visuais opcionais; não participam dos algoritmos nem representam distâncias físicas.
 
-Se o campo `dependent_devices` não for informado, o sistema assume zero. Os algoritmos de grafos não usam essa quantidade; ela é utilizada para contextualizar a criticidade no relatório.
+Se o campo `dependent_devices` não for informado, o sistema assume zero internamente, mas preserva a distinção entre valor informado e não informado. Os algoritmos de grafos não usam essa quantidade; ela é utilizada para contextualizar a criticidade no relatório.
 
-**Atenção:** se o número de dispositivos dependentes de um nó incluir os mesmos dispositivos já contabilizados em nós ancestrais, não some esses valores para estimar clientes únicos da rede. O relatório apresenta a soma informada como total cadastrado e identifica valores por equipamento.
+**Importante:** cada cliente deve ser contabilizado em apenas um vértice. Se clientes estiverem associados às CTOs, preencha `dependent_devices` nas CTOs e deixe zero nos equipamentos ancestrais. Assim, a soma representa clientes únicos.
 
 ## edges.csv
 
@@ -39,7 +39,7 @@ id,source,target,weight
 
 - `id`: identificador único do enlace.
 - `source` e `target`: IDs dos equipamentos nas extremidades.
-- `weight`: custo abstrato, finito e não negativo, utilizado por Dijkstra.
+- `weight`: peso finito e não negativo utilizado por Dijkstra. Na rede FTTH demonstrativa, representa a latência estimada do enlace em milissegundos (ms); o caminho calculado soma essas estimativas.
 
 Exemplo:
 
@@ -49,7 +49,7 @@ F-01,OLT-01,D-01,2.5
 F-02,OLT-01,D-02,3.0
 ```
 
-Os pesos dos arquivos de demonstração são sintéticos; não representam quilômetros, atenuação óptica ou capacidade real.
+Os pesos dos arquivos de demonstração são sintéticos; não são medições reais e não representam quilômetros, atenuação óptica ou capacidade.
 
 ## Regras
 
