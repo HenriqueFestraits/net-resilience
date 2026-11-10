@@ -287,12 +287,12 @@ public final class SimulationDemo {
 
                 Graph graph = new Graph();
 
-                graph.addNode("A", "Station A");
-                graph.addNode("B", "Station B");
-                graph.addNode("C", "Station C");
-                graph.addNode("D", "Station D");
-                graph.addNode("E", "Station E");
-                graph.addNode("F", "Station F");
+                graph.addNode("A", "Central de distribuição A");
+                graph.addNode("B", "Caixa de distribuição B");
+                graph.addNode("C", "Caixa de distribuição C");
+                graph.addNode("D", "Ponto de distribuição D");
+                graph.addNode("E", "Caixa de distribuição E");
+                graph.addNode("F", "Ponto de atendimento F");
 
                 graph.addEdge("E1", "A", "B", 2.0);
                 graph.addEdge("E2", "B", "D", 2.0);
