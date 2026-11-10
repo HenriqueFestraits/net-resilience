@@ -576,8 +576,10 @@ public final class NetResilienceApplication extends Application {
     private void updateGraphInformation() {
 
         graphInfoLabel.setText(
-                "Nós: " + graph.nodeCount() +
-                "\nConexões: " + graph.edgeCount()
+                "Equipamentos: " + graph.nodeCount() +
+                "\nEnlaces originais: " + graph.edgeCount() +
+                "\nEnlaces planejados: " + (plannedGraph == null ? 0 : plannedGraph.edgeCount()) +
+                "\nConexões hipotéticas: " + hypotheticalEdgeIds.size()
         );
     }
 
@@ -850,6 +852,7 @@ public final class NetResilienceApplication extends Application {
             hypotheticalEdgeIds.add(proposedEdgeId);
             graphCanvas.setGraph(plannedGraph);
             graphCanvas.setHypotheticalEdgeIds(hypotheticalEdgeIds);
+            updateGraphInformation();
             StringBuilder output = new StringBuilder();
             output.append("ANÁLISE DE CONEXÃO REDUNDANTE HIPOTÉTICA\n");
             output.append("========================================\n");
@@ -871,7 +874,7 @@ public final class NetResilienceApplication extends Application {
             output.append("A infraestrutura original importada permanece inalterada.\n");
             output.append("A viabilidade física (capacidade, portas, orçamento óptico e rota de fibra) precisa ser validada separadamente.");
             showReportDialog("Análise de conexão hipotética", output.toString());
-            statusLabel.setText("Análise concluída. A conexão avaliada é hipotética.");
+            statusLabel.setText("Conexão adicionada à topologia planejada. A rede original foi preservada.");
         } catch (NumberFormatException exception) {
             showError("Peso inválido", "Informe um número válido para o peso da conexão.");
         } catch (IllegalArgumentException exception) {
