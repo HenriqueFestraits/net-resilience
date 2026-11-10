@@ -1,43 +1,43 @@
 ﻿id,label,x,y
-C01,Central de distribuição 01,600,350
-C02,Central de distribuição 02,740,420
-C03,Central de distribuição 03,770,520
-C04,Central de distribuição 04,740,620
-C05,Central de distribuição 05,600,690
-C06,Central de distribuição 06,460,620
-C07,Central de distribuição 07,430,520
-C08,Central de distribuição 08,460,420
-C09,Central de distribuição 09,600,520
-C10,Central de distribuição 10,650,590
-N01,Norte - Ponto de conexão,760,250
-N02,Norte - Caixa de distribuição A,680,160
-N03,Norte - Caixa de distribuição B,840,160
-N04,Norte - Caixa principal,960,160
-N05,Norte - Caixa de distribuição C,910,70
-N06,Norte - Caixa de distribuição D,1010,70
-S01,Sul - Ponto de conexão,600,850
-S02,Sul - Caixa de distribuição A,500,940
-S03,Sul - Caixa de distribuição B,700,940
-S04,Sul - Caixa principal,700,1050
-S05,Sul - Caixa de distribuição C,640,1140
-S06,Sul - Caixa de distribuição D,770,1140
-W01,Oeste - Ponto de conexão,250,520
-W02,Oeste - Caixa de distribuição A,170,440
-W03,Oeste - Caixa principal,170,600
-W04,Oeste - Caixa de distribuição B,70,600
-W05,Oeste - Caixa de distribuição C,25,520
-W06,Oeste - Caixa de distribuição D,25,680
-A01,Região aeroportuária - Ponto de conexão,300,250
-A02,Região aeroportuária - Caixa A,220,170
-A03,Região aeroportuária - Caixa B,140,250
-A04,Região aeroportuária - Caixa C,220,330
-E01,Leste - Ponto de conexão A,950,420
-E02,Leste - Caixa de distribuição A,1100,420
-E03,Leste - Caixa de distribuição B,1180,520
-E04,Leste - Ponto de conexão B,1100,620
-E05,Leste - Caixa de distribuição C,950,620
-E06,Leste - Caixa de distribuição D,900,520
-P01,Região portuária - Ponto de conexão A,850,800
-P02,Região portuária - Caixa A,1000,800
-P03,Região portuária - Ponto de conexão B,1000,950
-P04,Região portuária - Caixa B,850,950
+C01,Central 01,600,350
+C02,Central 02,740,420
+C03,Central 03,770,520
+C04,Central 04,740,620
+C05,Central 05,600,690
+C06,Central 06,460,620
+C07,Central 07,430,520
+C08,Central 08,460,420
+C09,Central 09,600,520
+C10,Central 10,650,590
+N01,Norte - Entrada,760,250
+N02,Norte - Caixa A,680,160
+N03,Norte - Caixa B,840,160
+N04,Norte - Principal,960,160
+N05,Norte - Caixa C,910,70
+N06,Norte - Caixa D,1010,70
+S01,Sul - Entrada,600,850
+S02,Sul - Caixa A,500,940
+S03,Sul - Caixa B,700,940
+S04,Sul - Principal,700,1050
+S05,Sul - Caixa C,640,1140
+S06,Sul - Caixa D,770,1140
+W01,Oeste - Entrada,250,520
+W02,Oeste - Caixa A,170,440
+W03,Oeste - Principal,170,600
+W04,Oeste - Caixa B,70,600
+W05,Oeste - Caixa C,25,520
+W06,Oeste - Caixa D,25,680
+A01,Aeroporto - Entrada,300,250
+A02,Aeroporto - Caixa A,220,170
+A03,Aeroporto - Caixa B,140,250
+A04,Aeroporto - Caixa C,220,330
+E01,Leste - Entrada A,950,420
+E02,Leste - Caixa A,1100,420
+E03,Leste - Caixa B,1180,520
+E04,Leste - Entrada B,1100,620
+E05,Leste - Caixa C,950,620
+E06,Leste - Caixa D,900,520
+P01,Porto - Entrada A,850,800
+P02,Porto - Caixa A,1000,800
+P03,Porto - Entrada B,1000,950
+P04,Porto - Caixa B,850,950
