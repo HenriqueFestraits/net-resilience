@@ -31,6 +31,7 @@ import com.henrique.netresilience.model.scenario.FailureScenario;
 
 import com.henrique.netresilience.service.FailureSimulationService;
 import com.henrique.netresilience.service.RedundancyAnalysisService;
+import com.henrique.netresilience.service.NetworkAssessmentService;
 
 import com.henrique.netresilience.ui.component.GraphCanvas;
 
@@ -69,6 +70,9 @@ public final class NetResilienceApplication extends Application {
 
     private final RedundancyAnalysisService redundancyService =
             new RedundancyAnalysisService();
+
+    private final NetworkAssessmentService assessmentService =
+            new NetworkAssessmentService();
 
     private final GraphCanvas graphCanvas =
             new GraphCanvas();
@@ -110,7 +114,10 @@ public final class NetResilienceApplication extends Application {
             createSecondaryButton("Limpar falhas");
 
     private final Button analyzeRedundancyButton =
-            createSecondaryButton("Avaliar conexão redundante");
+            createSecondaryButton("Testar conexão hipotética");
+
+    private final Button assessNetworkButton =
+            createActionButton("Avaliar rede e gerar relatório");
 
     private Graph graph;
 
@@ -295,7 +302,15 @@ public final class NetResilienceApplication extends Application {
                 analyzeRedundancyButton
         );
 
-        Label resultTitle = createTitle("Resultados");
+        assessNetworkButton.setOnAction(event -> runNetworkAssessment());
+        assessNetworkButton.setDisable(true);
+
+        VBox assessmentSection = new VBox(
+                8,
+                createTitle("Diagnóstico da rede"),
+                new Label("Gere um relatório consolidado com vulnerabilidades e sugestões de redundância."),
+                assessNetworkButton
+        );
 
         resultArea.setEditable(false);
         resultArea.setWrapText(true);
@@ -315,14 +330,6 @@ public final class NetResilienceApplication extends Application {
                 "-fx-background-radius: 7px;"
         );
 
-        VBox resultsSection = new VBox(
-                8,
-                resultTitle,
-                resultArea
-        );
-
-        VBox.setVgrow(resultArea, Priority.ALWAYS);
-
         Label statusTitle = createTitle("Status");
 
         statusLabel.setWrapText(true);
@@ -340,14 +347,13 @@ public final class NetResilienceApplication extends Application {
                 new Separator(),
                 graphTitle,
                 graphSection,
+                assessmentSection,
                 new Separator(),
                 routeTitle,
                 routeSection,
                 new Separator(),
                 failureTitle,
                 failureSection,
-                new Separator(),
-                resultsSection,
                 new Separator(),
                 statusTitle,
                 statusSection
@@ -530,6 +536,7 @@ public final class NetResilienceApplication extends Application {
             simulateButton.setDisable(false);
             clearFailuresButton.setDisable(false);
             analyzeRedundancyButton.setDisable(false);
+            assessNetworkButton.setDisable(false);
 
             statusLabel.setText(
                     "Rede carregada com sucesso. " +
@@ -545,6 +552,7 @@ public final class NetResilienceApplication extends Application {
             simulateButton.setDisable(true);
             clearFailuresButton.setDisable(true);
             analyzeRedundancyButton.setDisable(true);
+            assessNetworkButton.setDisable(true);
 
             graphInfoLabel.setText("Nenhuma rede carregada.");
 
@@ -741,6 +749,36 @@ public final class NetResilienceApplication extends Application {
         }
     }
 
+    private void runNetworkAssessment() {
+        if (graph == null) {
+            showError("Avaliação indisponível", "Importe uma rede antes de gerar o relatório.");
+            return;
+        }
+        try {
+            String report = assessmentService.generateReport(graph);
+            showReportDialog("Relatório de avaliação da rede", report);
+            statusLabel.setText("Relatório de avaliação gerado.");
+        } catch (IllegalArgumentException exception) {
+            showError("Falha na avaliação", exception.getMessage());
+        }
+    }
+
+    private void showReportDialog(String title, String content) {
+        Alert dialog = new Alert(Alert.AlertType.INFORMATION);
+        dialog.initOwner(primaryStage);
+        dialog.setTitle(title);
+        dialog.setHeaderText(null);
+        TextArea reportArea = new TextArea(content);
+        reportArea.setEditable(false);
+        reportArea.setWrapText(true);
+        reportArea.setPrefColumnCount(85);
+        reportArea.setPrefRowCount(32);
+        reportArea.setStyle("-fx-font-family: monospace; -fx-font-size: 12px;");
+        dialog.getDialogPane().setContent(reportArea);
+        dialog.getDialogPane().setPrefSize(850, 700);
+        dialog.showAndWait();
+    }
+
     private void runRedundancyAnalysis() {
         if (graph == null) {
             showError("Análise indisponível", "Importe uma infraestrutura antes de continuar.");
@@ -791,7 +829,7 @@ public final class NetResilienceApplication extends Application {
                     .append(result.getArticulationPointCountReduction()).append("\n\n");
             output.append("A infraestrutura original não foi alterada.\n");
             output.append("A viabilidade física (capacidade, portas, orçamento óptico e rota de fibra) precisa ser validada separadamente.");
-            resultArea.setText(output.toString());
+            showReportDialog("Análise de conexão hipotética", output.toString());
             statusLabel.setText("Análise concluída. A conexão avaliada é hipotética.");
         } catch (NumberFormatException exception) {
             showError("Peso inválido", "Informe um número válido para o peso da conexão.");
@@ -938,8 +976,7 @@ public final class NetResilienceApplication extends Application {
                 describeComponents(result.getAffectedComponents())
         );
 
-        resultArea.setText(output.toString());
-        resultArea.positionCaret(0);
+        showReportDialog("Resultado da simulação de falhas", output.toString());
     }
 
     private String describeRoute(
