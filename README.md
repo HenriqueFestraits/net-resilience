@@ -1,247 +1,131 @@
 # NetResilience
 
-**NetResilience** é um projeto acadêmico desenvolvido em Java para analisar a resiliência de redes por meio de algoritmos em grafos. A aplicação permite encontrar caminhos de menor custo, identificar elementos críticos e simular falhas em nós e conexões, comparando o comportamento da rede antes e depois das indisponibilidades.
+**NetResilience** é uma aplicação acadêmica em Java para análise de vulnerabilidade e resiliência de infraestruturas de telecomunicações, utilizando algoritmos em grafos. O sistema representa uma rede de distribuição de conectividade, permite simular indisponibilidades e avaliar o efeito estrutural de uma conexão redundante hipotética.
 
-Como cenário de aplicação, o projeto considera redes como sistemas de transporte: os nós representam estações ou pontos de conexão, enquanto as arestas representam os trechos que ligam esses pontos. O peso de uma aresta representa o custo associado ao deslocamento.
+## Problema abordado
 
-## Funcionalidades implementadas
+Falhas em equipamentos ou enlaces de uma infraestrutura de telecomunicações podem interromper a conectividade de regiões atendidas. O NetResilience oferece apoio à análise dessa infraestrutura, identificando elementos estruturalmente críticos e comparando os efeitos de cenários de falha ou de uma possível conexão adicional.
 
-### Modelagem de grafos
+O sistema é uma ferramenta acadêmica de análise topológica. Ele **não configura equipamentos, não redireciona tráfego e não comprova a viabilidade física de uma nova fibra**. Em redes FTTH/PON, fatores como capacidade, portas disponíveis, divisores ópticos, orçamento óptico, tecnologia e rota física precisam ser avaliados separadamente.
 
-A classe `Graph` representa um grafo **não direcionado e ponderado**, implementado com lista de adjacência.
+## Modelo de representação
 
-- **`Graph`**: gerencia os nós, as arestas e as relações entre eles.
-- **`Node`**: representa um nó identificado por ID e associado a um rótulo. Também pode armazenar coordenadas visuais opcionais (`x` e `y`), usadas somente pela interface gráfica.
-- **`Edge`**: representa uma conexão identificada por ID, com origem, destino e peso.
+A infraestrutura é abstraída como um grafo não direcionado e ponderado:
 
-A estrutura permite arestas paralelas, não permite laços (uma aresta que conecta um nó a ele próprio) e exige pesos finitos e não negativos. As coordenadas visuais dos nós são independentes dos pesos das arestas e não interferem nos algoritmos.
+- **Vértices (Node)**: centrais, equipamentos, caixas ou pontos de distribuição.
+- **Arestas (Edge)**: enlaces que conectam dois pontos da infraestrutura.
+- **Peso da aresta**: custo abstrato utilizado pelos algoritmos de caminho mínimo. Nos conjuntos de demonstração, os pesos são ilustrativos e não representam quilômetros nem medições reais.
+- **Coordenadas X/Y**: metadados exclusivamente visuais, utilizados para posicionar os vértices na interface.
 
-### Caminhos mínimos — Dijkstra
+A estrutura permite arestas paralelas, úteis para representar conceitualmente enlaces independentes entre os mesmos pontos. A aplicação não modela capacidade, fluxo, clientes atendidos, tecnologia de acesso ou restrições físicas de engenharia.
 
-A classe `Dijkstra` implementa o algoritmo de Dijkstra utilizando uma fila de prioridade (`PriorityQueue`).
+## Funcionalidades
 
-O algoritmo permite:
+### 1. Análise de caminhos mínimos — Dijkstra
 
-- Encontrar o caminho de menor custo entre um nó de origem e um nó de destino.
-- Recuperar a sequência de nós e as arestas utilizadas na rota.
-- Calcular o custo total do caminho.
-- Indicar quando não existe uma rota entre os nós selecionados.
+A classe Dijkstra utiliza uma fila de prioridade para encontrar o caminho de menor custo entre uma origem e um destino. O resultado inclui a sequência de vértices, arestas e o custo total. Pesos devem ser finitos e não negativos.
 
-O resultado é representado por `RouteResult`. A busca retorna um `Optional<RouteResult>`, que fica vazio quando não há caminho disponível.
+### 2. Identificação de elementos críticos — Tarjan
 
-### Elementos críticos — Tarjan
+A classe TarjanAnalysis utiliza busca em profundidade (DFS), tempos de descoberta e valores low-link para identificar:
 
-A classe `TarjanAnalysis` utiliza busca em profundidade (DFS), tempos de descoberta e valores *low-link* para identificar:
+- **Pontes**: enlaces cuja remoção aumenta o número de componentes conexos.
+- **Pontos de articulação**: vértices cuja remoção aumenta o número de componentes conexos.
 
-- **Pontes (*bridges*)**: arestas cuja remoção aumenta o número de componentes conexos.
-- **Pontos de articulação (*articulation points*)**: nós cuja remoção aumenta o número de componentes conexos.
+A análise considera grafos desconexos e arestas paralelas.
 
-O resultado é armazenado em `CriticalElementsResult`. A implementação considera grafos desconexos e trata corretamente a presença de arestas paralelas.
+### 3. Componentes conexos — BFS
 
-### Componentes conexos
+A classe ConnectedComponents utiliza busca em largura (BFS) para identificar os grupos de vértices que permanecem conectados entre si.
 
-A classe `ConnectedComponents` utiliza busca em largura (BFS) para identificar os componentes conexos do grafo.
+### 4. Simulação de falhas
 
-O resultado, armazenado em `ConnectedComponentsResult`, permite consultar:
+A classe FailureScenario registra indisponibilidades de vértices e arestas. Quando um vértice fica indisponível, seus enlaces incidentes também deixam de ser utilizáveis.
 
-- A lista de componentes e os nós que pertencem a cada um.
-- A quantidade de componentes conexos.
-- Se o grafo é conexo.
+A classe FailureSimulationService analisa a topologia original, constrói uma cópia sem os elementos indisponíveis e executa novamente Dijkstra, Tarjan e BFS. O grafo original é preservado.
 
-### Cenários de falha
+Os resultados incluem rotas antes/depois, componentes conexos, pontes, pontos de articulação, disponibilidade de vértices e enlaces e cobertura do maior componente.
 
-A classe `FailureScenario` permite registrar e restaurar indisponibilidades por meio dos IDs dos nós e das arestas.
+### 5. Avaliação de conexão redundante hipotética
 
-Quando um nó fica indisponível, todas as arestas incidentes a ele também deixam de poder ser utilizadas. O cenário não modifica diretamente o grafo original.
+A classe RedundancyAnalysisService permite avaliar o efeito estrutural de adicionar uma conexão entre dois vértices existentes.
 
-### Simulação de falhas
+O serviço:
+1. Analisa pontes, pontos de articulação e componentes conexos da topologia original.
+2. Cria uma cópia da infraestrutura, preservando os vértices, coordenadas, enlaces e pesos.
+3. Adiciona à cópia o enlace hipotético informado.
+4. Executa novamente as análises estruturais.
+5. Retorna os indicadores antes e depois, incluindo a redução na quantidade de pontes e pontos de articulação.
 
-A classe `FailureSimulationService` coordena os algoritmos para comparar a rede original com a rede afetada por um cenário de falhas.
+A interface permite selecionar os dois pontos nos campos de origem e destino, informar um identificador e o peso abstrato da conexão e visualizar a comparação. A conexão proposta existe apenas na cópia utilizada para análise; ela não altera a infraestrutura carregada.
 
-Durante uma simulação, o serviço:
+Uma redução no número de pontes ou pontos de articulação indica uma melhoria topológica segundo esses indicadores, mas não garante por si só que a conexão seja implementável ou que toda falha real seja tolerada.
 
-1. Valida se os elementos registrados no cenário existem no grafo original.
-2. Calcula a rota, os componentes conexos e os elementos críticos da rede original.
-3. Constrói uma cópia da rede sem os nós e as arestas indisponíveis.
-4. Executa novamente as análises na rede afetada.
-5. Consolida os resultados em um objeto `FailureSimulationResult`.
+## Interface gráfica
 
-O grafo original é preservado. Assim, diferentes cenários podem ser simulados sem reconstruir ou modificar a rede de referência.
+A interface utiliza JavaFX. Ela permite importar os arquivos CSV, selecionar origem e destino, marcar vértices e arestas como indisponíveis, visualizar rotas e avaliar uma conexão redundante hipotética.
 
-### Resultados da simulação
-
-A classe `FailureSimulationResult` reúne:
-
-- Rota original e rota após as falhas.
-- Componentes conexos antes e depois do cenário.
-- Pontes e pontos de articulação antes e depois.
-- IDs dos nós e das arestas explicitamente registrados como indisponíveis.
-- Disponibilidade da rota e indicação de perda da rota.
-- Diferença entre o custo da rota afetada e o custo original, quando ambas existem.
-
-### Importação de redes por CSV
-
-A classe GraphCsvLoader importa a topologia da rede a partir de dois arquivos:
-
-- `nodes.csv`: ID, rótulo e, opcionalmente, coordenadas visuais dos nós.
-- `edges.csv`: ID, origem, destino e peso de cada aresta.
-
-O arquivo de nós aceita os cabeçalhos `id,label` e `id,label,x,y`. Consulte também o [guia de formato dos CSVs](data/CSV_FORMAT.md). Quando as coordenadas estão presentes, a interface usa o posicionamento definido no CSV. Quando estão ausentes, a visualização mantém o posicionamento circular automático.
-
-As coordenadas são valores numéricos relativos: X aumenta para a direita e Y aumenta para baixo. A interface ajusta escala e centralização para encaixar a rede na área disponível, preservando as proporções.
-
-Exemplo:
-
-```csv
-id,label,x,y
-A,Estação Central,400,300
-B,Estação Norte,230,120
-C,Estação Sul,230,480
-```
-
-O formato de edges.csv permanece:
-
-```csv
-id,source,target,weight
-E1,A,B,2.5
-E2,B,C,3.0
-```
-
-### Interface gráfica
-
-A interface utiliza JavaFX e a classe GraphCanvas para visualizar a rede importada. É possível selecionar nós e arestas para criar cenários de falha, escolher origem e destino, executar a simulação e visualizar as rotas e os indicadores de resiliência.
-
-Para iniciar a interface, execute:
+Para executar:
 
 ```bash
 mvn javafx:run
 ```
 
-### Demonstração pelo terminal
+## Demonstração pelo terminal
 
-A classe `SimulationDemo` monta uma rede de exemplo e executa dois cenários:
+A classe SimulationDemo demonstra cenários de falha. Também é possível carregar arquivos CSV e indicar origem, destino e falhas pela linha de comando.
 
-1. **Falha da conexão E1:** existe uma rota alternativa entre a origem e o destino, mas o custo do percurso aumenta.
-2. **Falha da conexão E5:** a rede é dividida em dois componentes conexos e deixa de existir uma rota entre os pontos selecionados.
+```bash
+mvn clean package
+java -cp target/classes com.henrique.netresilience.demo.SimulationDemo
+```
 
-A demonstração também apresenta as rotas, os custos, os componentes conexos e os elementos críticos antes e depois de cada cenário. Ao final, verifica que a rede original continua com seus nós e arestas.
+## Formato dos arquivos CSV
+
+- nodes.csv: id,label ou id,label,x,y.
+- edges.csv: id,source,target,weight.
+
+Consulte data/CSV_FORMAT.md para detalhes e exemplos.
+
+## Conjuntos de demonstração
+
+- data/rede_densa: topologia em malha organizada em grade, útil para experimentar caminhos alternativos.
+- data/rede_hibrida: topologia com núcleo central, ramificações regionais e conexões alternativas.
+
+Os rótulos descrevem elementos hipotéticos de uma infraestrutura de telecomunicações. As topologias e pesos são dados sintéticos de demonstração, não o levantamento de uma operadora real.
 
 ## Tecnologias
 
-- **Java 17**
-- **Apache Maven**
-- **JavaFX 17**
-- **JUnit 6**
+- Java 17
+- Apache Maven
+- JavaFX 17
+- JUnit 6
 
-## Estrutura do projeto
+## Testes
 
-```text
-net-resilience/
-├── pom.xml
-├── README.md
-├── data/
-│   ├── nodes.csv
-│   ├── edges.csv
-│   └── CSV_FORMAT.md
-└── src/
-    ├── main/java/com/henrique/netresilience/
-    │   ├── algorithm/
-    │   │   ├── connectivity/
-    │   │   │   ├── ConnectedComponents.java
-    │   │   │   └── TarjanAnalysis.java
-    │   │   └── shortestpath/
-    │   │       └── Dijkstra.java
-    │   ├── demo/
-    │   │   └── SimulationDemo.java
-    │   ├── io/
-    │   │   └── GraphCsvLoader.java
-    │   ├── model/
-    │   │   ├── graph/
-    │   │   │   ├── Graph.java
-    │   │   │   ├── Node.java
-    │   │   │   └── Edge.java
-    │   │   ├── result/
-    │   │   │   ├── ConnectedComponentsResult.java
-    │   │   │   ├── CriticalElementsResult.java
-    │   │   │   ├── FailureSimulationResult.java
-    │   │   │   └── RouteResult.java
-    │   │   └── scenario/
-    │   │       └── FailureScenario.java
-    │   ├── service/
-    │   │   └── FailureSimulationService.java
-    │   └── ui/
-    │       ├── NetResilienceApplication.java
-    │       └── component/
-    │           └── GraphCanvas.java
-    └── test/java/com/henrique/netresilience/
-        ├── algorithm/
-        │   ├── connectivity/
-        │   │   ├── ConnectedComponentsTest.java
-        │   │   └── TarjanAnalysisTest.java
-        │   └── shortestpath/
-        │       └── DijkstraTest.java
-        ├── io/
-        │   └── GraphCsvLoaderTest.java
-        ├── model/
-        │   ├── graph/
-        │   │   └── GraphTest.java
-        │   ├── result/
-        │   │   └── FailureSimulationResultTest.java
-        │   └── scenario/
-        │       └── FailureScenarioTest.java
-        └── service/
-            └── FailureSimulationServiceTest.java
-```
-
-## Como executar
-
-### Pré-requisitos
-
-- JDK 17 ou superior.
-- Apache Maven instalado e disponível no terminal.
-
-### Clonar o repositório
-
-```bash
-git clone https://github.com/HenriqueFestraits/net-resilience.git
-cd net-resilience
-```
-
-### Executar os testes
-
-Na raiz do projeto, execute:
+Execute na raiz do projeto:
 
 ```bash
 mvn test
 ```
 
-O Maven compila o projeto e executa os testes automatizados. Os relatórios ficam disponíveis em `target/surefire-reports/`.
+Os testes cobrem a modelagem, os algoritmos, importação CSV, simulação de falhas e análise de conexões redundantes.
 
-### Executar a demonstração
+## Estrutura do projeto
 
-Para compilar o projeto e executar os testes antes da demonstração:
-
-```bash
-mvn clean package
+```text
+src/main/java/com/henrique/netresilience/
+├── algorithm/              # BFS, Tarjan e Dijkstra
+├── demo/                   # Demonstração por terminal
+├── io/                     # Importação CSV
+├── model/
+│   ├── graph/              # Grafo, vértices e arestas
+│   ├── result/             # Modelos de resultados
+│   └── scenario/           # Cenários de falha
+├── service/
+│   ├── FailureSimulationService.java
+│   └── RedundancyAnalysisService.java
+└── ui/                     # Interface JavaFX
 ```
 
-Em seguida, execute a classe principal da demonstração:
-
-```bash
-java -cp target/classes com.henrique.netresilience.demo.SimulationDemo
-```
-
-## Próximas etapas
-
-O projeto continua em desenvolvimento. Entre as próximas etapas planejadas estão:
-
-- Ampliar os indicadores para comparar o impacto de diferentes cenários de falha.
-- Expandir os cenários de demonstração e os testes automatizados.
-
-## Contexto acadêmico
-
-Projeto desenvolvido para a disciplina de **Tópicos Avançados em Estruturas de Dados**, com foco na implementação, aplicação e análise de algoritmos em grafos.
-
----
-
-*Projeto acadêmico em desenvolvimento.*
+Projeto desenvolvido para a disciplina de **Tópicos Avançados em Estruturas de Dados**, com foco na aplicação de estruturas e algoritmos em grafos a um problema de resiliência de redes de telecomunicações.
