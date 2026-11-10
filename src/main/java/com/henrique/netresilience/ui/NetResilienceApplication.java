@@ -251,7 +251,7 @@ public final class NetResilienceApplication extends Application {
 
         Label routeTitle = createTitle("Análise de rota");
 
-        sourceSelector.setPromptText("Ponto de origem");
+        sourceSelector.setPromptText("Selecione o gateway");
         targetSelector.setPromptText("Ponto de destino");
 
         sourceSelector.setMaxWidth(Double.MAX_VALUE);
@@ -259,7 +259,7 @@ public final class NetResilienceApplication extends Application {
 
         VBox routeSection = new VBox(
                 9,
-                createSectionLabel("Origem"),
+                createSectionLabel("Gateway de internet / origem"),
                 sourceSelector,
                 createSectionLabel("Destino"),
                 targetSelector
@@ -809,15 +809,20 @@ public final class NetResilienceApplication extends Application {
         Alert dialog = new Alert(Alert.AlertType.INFORMATION);
         dialog.initOwner(primaryStage);
         dialog.setTitle(title);
-        dialog.setHeaderText(null);
+        dialog.setHeaderText("Análise técnica da infraestrutura e dos cenários selecionados");
         TextArea reportArea = new TextArea(content);
         reportArea.setEditable(false);
-        reportArea.setWrapText(true);
-        reportArea.setPrefColumnCount(85);
-        reportArea.setPrefRowCount(32);
-        reportArea.setStyle("-fx-font-family: monospace; -fx-font-size: 12px;");
+        reportArea.setWrapText(false);
+        reportArea.setPrefColumnCount(100);
+        reportArea.setPrefRowCount(38);
+        reportArea.setStyle(
+                "-fx-font-family: 'Consolas', 'Monospaced';" +
+                "-fx-font-size: 13px;" +
+                "-fx-control-inner-background: #f8fafc;" +
+                "-fx-text-fill: #1e293b;"
+        );
         dialog.getDialogPane().setContent(reportArea);
-        dialog.getDialogPane().setPrefSize(850, 700);
+        dialog.getDialogPane().setPrefSize(980, 760);
         dialog.showAndWait();
     }
 
