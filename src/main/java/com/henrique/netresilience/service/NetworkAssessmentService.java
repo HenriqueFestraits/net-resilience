@@ -48,8 +48,9 @@ public final class NetworkAssessmentService {
         report.append("1. VISÃO GERAL\n");
         report.append("Equipamentos: ").append(graph.nodeCount()).append("\n");
         report.append("Enlaces: ").append(graph.edgeCount()).append("\n");
-        report.append("Dispositivos dependentes informados: ")
-                .append(totalDependentDevices).append("\n");
+        report.append("Soma das contagens de dispositivos dependentes: ")
+                .append(totalDependentDevices)
+                .append(" (pode haver sobreposição entre nós)\\n");
         report.append("Componentes conexos: ")
                 .append(components.getComponentCount()).append("\n\n");
 
@@ -110,7 +111,7 @@ public final class NetworkAssessmentService {
         }
 
         report.append("\n5. SUGESTÕES DE REDUNDÂNCIA\n");
-        List<Candidate> candidates = findCandidates(graph, critical);
+        List<Candidate> candidates = findCandidates(graph, critical, components.getComponentCount());
         if (candidates.isEmpty()) {
             report.append("Não foi encontrada conexão candidata que reduza a quantidade de pontes ou pontos de articulação.\n");
         } else {
@@ -119,7 +120,9 @@ public final class NetworkAssessmentService {
                 report.append(rank++).append(") ").append(candidate.source.getId())
                         .append(" <-> ").append(candidate.target.getId())
                         .append(" [prioridade ").append(candidate.priority).append("]\n");
-                report.append("   Pontes: ").append(candidate.beforeBridges)
+                report.append("   Componentes: ").append(candidate.beforeComponents)
+                        .append(" -> ").append(candidate.afterComponents)
+                        .append("; pontes: ").append(candidate.beforeBridges)
                         .append(" -> ").append(candidate.afterBridges)
                         .append("; pontos de articulação: ")
                         .append(candidate.beforeArticulations).append(" -> ")
@@ -153,7 +156,8 @@ public final class NetworkAssessmentService {
 
     private List<Candidate> findCandidates(
             Graph graph,
-            CriticalElementsResult baseline
+            CriticalElementsResult baseline,
+            int baselineComponents
     ) {
         List<Node> nodes = graph.getNodes();
         List<Candidate> candidates = new ArrayList<>();
@@ -177,9 +181,12 @@ public final class NetworkAssessmentService {
                 int articulationReduction = baseline.getArticulationPoints().size()
                         - after.getArticulationPoints().size();
 
-                int priorityScore = articulationReduction * 200 + bridgeReduction * 100;
+                int afterComponents = connectedComponents.analyze(proposed).getComponentCount();
+                int priorityScore = (baselineComponents - afterComponents) * 300
+                        + articulationReduction * 200 + bridgeReduction * 100;
                 if (priorityScore > 0) {
                     candidates.add(new Candidate(source, target,
+                            baselineComponents, afterComponents,
                             baseline.getBridges().size(), after.getBridges().size(),
                             baseline.getArticulationPoints().size(),
                             after.getArticulationPoints().size(), priorityScore));
@@ -213,22 +220,32 @@ public final class NetworkAssessmentService {
     private static final class Candidate {
         private final Node source;
         private final Node target;
+        private final int beforeComponents;
+        private final int afterComponents;
         private final int beforeBridges;
         private final int afterBridges;
         private final int beforeArticulations;
         private final int afterArticulations;
         private final int priority;
 
-        private Candidate(Node source, Node target, int beforeBridges,
-                          int afterBridges, int beforeArticulations,
-                          int afterArticulations, int priority) {
+        private Candidate(Node source, Node target, int beforeComponents,
+                          int afterComponents, int beforeBridges, int afterBridges,
+                          int beforeArticulations, int afterArticulations, int priority) {
             this.source = source;
             this.target = target;
+            this.beforeComponents = beforeComponents;
+            this.afterComponents = afterComponents;
             this.beforeBridges = beforeBridges;
             this.afterBridges = afterBridges;
             this.beforeArticulations = beforeArticulations;
             this.afterArticulations = afterArticulations;
             this.priority = priority;
+        }
+
+        private String priorityLabel() {
+            if (priority >= 300) return "Alta";
+            if (priority >= 100) return "Média";
+            return "Baixa";
         }
     }
 }
