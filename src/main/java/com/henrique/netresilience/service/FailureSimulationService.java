@@ -104,7 +104,20 @@ public final class FailureSimulationService {
         //Add nodes first
         for(Node node : originalGraph.getNodes()){
             if(!scenario.isNodeUnavailable(node.getId())){
-                affectedGraph.addNode(node.getId(), node.getLabel());
+                if (node.hasDependentDeviceCount()) {
+                    if (node.hasPosition()) {
+                        affectedGraph.addNode(node.getId(), node.getLabel(),
+                                node.getDependentDevices(), node.getX(), node.getY());
+                    } else {
+                        affectedGraph.addNode(node.getId(), node.getLabel(),
+                                node.getDependentDevices());
+                    }
+                } else if (node.hasPosition()) {
+                    affectedGraph.addNode(node.getId(), node.getLabel(),
+                            node.getX(), node.getY());
+                } else {
+                    affectedGraph.addNode(node.getId(), node.getLabel());
+                }
             }
         }
 
