@@ -7,8 +7,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import java.util.LinkedHashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -791,7 +789,7 @@ public final class NetResilienceApplication extends Application {
         }
         try {
             String report = assessmentService.generateReport(
-                    graph, plannedGraph, unavailableNodeIds, unavailableEdgeIds);
+                    graph, plannedGraph, unavailableNodeIds, unavailableEdgeIds, hypotheticalEdgeIds);
             showReportDialog("Relatório de avaliação da rede", report);
             statusLabel.setText("Relatório de avaliação gerado.");
         } catch (IllegalArgumentException exception) {
@@ -904,6 +902,12 @@ public final class NetResilienceApplication extends Application {
 
         output.append("SIMULAÇÃO CONCLUÍDA\n");
         output.append("==============================\n");
+        output.append("Base de simulação: topologia planejada\n");
+        output.append("Conexões hipotéticas consideradas: ")
+                .append(hypotheticalEdgeIds.isEmpty()
+                        ? "Nenhuma"
+                        : String.join(", ", hypotheticalEdgeIds))
+                .append("\n");
 
         output.append("Origem: ")
                 .append(result.getSourceNodeId())
@@ -917,11 +921,11 @@ public final class NetResilienceApplication extends Application {
         output.append("ROTAS\n");
         output.append("------------------------------\n");
 
-        output.append("Original:\n")
+        output.append("Antes das falhas (topologia planejada):\n")
                 .append(describeRoute(result.getOriginalRoute()))
                 .append("\n\n");
 
-        output.append("Após as falhas:\n")
+        output.append("Após as falhas (mantendo enlaces hipotéticos disponíveis):\n")
                 .append(describeRoute(result.getAffectedRoute()))
                 .append("\n\n");
 
