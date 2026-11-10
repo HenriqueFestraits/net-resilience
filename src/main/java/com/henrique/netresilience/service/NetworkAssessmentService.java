@@ -40,6 +40,7 @@ public final class NetworkAssessmentService {
 
         StringBuilder report = new StringBuilder();
         int totalDependentDevices = graph.getNodes().stream()
+                .filter(Node::hasDependentDeviceCount)
                 .mapToInt(Node::getDependentDevices)
                 .sum();
 
@@ -66,7 +67,9 @@ public final class NetworkAssessmentService {
         for (Node node : critical.getArticulationPoints()) {
             report.append("  - ").append(node.getId()).append(" — ")
                     .append(node.getLabel()).append("; dispositivos dependentes: ")
-                    .append(node.getDependentDevices()).append("\n");
+                    .append(node.hasDependentDeviceCount()
+                            ? String.valueOf(node.getDependentDevices())
+                            : "não informado").append("\n");
         }
         if (critical.getBridges().isEmpty()
                 && critical.getArticulationPoints().isEmpty()) {
@@ -93,13 +96,15 @@ public final class NetworkAssessmentService {
 
         int listed = 0;
         for (Node node : rankedNodes) {
-            if (node.getDependentDevices() == 0
+            if (!node.hasDependentDeviceCount()
                     && !articulationIds.contains(node.getId())) {
                 continue;
             }
             report.append("  - ").append(node.getId()).append(" — ")
                     .append(node.getLabel()).append(": ")
-                    .append(node.getDependentDevices()).append(" dispositivo(s)");
+                    .append(node.hasDependentDeviceCount()
+                            ? node.getDependentDevices() + " dispositivo(s)"
+                            : "quantidade não informada");
             if (articulationIds.contains(node.getId())) {
                 report.append("; ponto de articulação");
             }
@@ -128,7 +133,10 @@ public final class NetworkAssessmentService {
                         .append(candidate.beforeArticulations).append(" -> ")
                         .append(candidate.afterArticulations).append("\n");
                 report.append("   Dispositivos dependentes nos extremos: ")
-                        .append(candidate.source.getDependentDevices() + candidate.target.getDependentDevices())
+                        .append((candidate.source.hasDependentDeviceCount()
+                                ? candidate.source.getDependentDevices() : 0)
+                        + (candidate.target.hasDependentDeviceCount()
+                                ? candidate.target.getDependentDevices() : 0))
                         .append("\n");
             }
         }
@@ -203,11 +211,17 @@ public final class NetworkAssessmentService {
     private Graph copyGraph(Graph original) {
         Graph copy = new Graph();
         for (Node node : original.getNodes()) {
-            if (node.hasPosition()) {
-                copy.addNode(node.getId(), node.getLabel(),
-                        node.getDependentDevices(), node.getX(), node.getY());
+            if (node.hasDependentDeviceCount()) {
+                if (node.hasPosition()) {
+                    copy.addNode(node.getId(), node.getLabel(),
+                            node.getDependentDevices(), node.getX(), node.getY());
+                } else {
+                    copy.addNode(node.getId(), node.getLabel(), node.getDependentDevices());
+                }
+            } else if (node.hasPosition()) {
+                copy.addNode(node.getId(), node.getLabel(), node.getX(), node.getY());
             } else {
-                copy.addNode(node.getId(), node.getLabel(), node.getDependentDevices());
+                copy.addNode(node.getId(), node.getLabel());
             }
         }
         for (Edge edge : original.getEdges()) {
