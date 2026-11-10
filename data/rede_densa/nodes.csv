@@ -1,37 +1,37 @@
 ﻿id,label,x,y
-G11,Quadra 1-1,120,100
-G12,Quadra 1-2,250,100
-G13,Quadra 1-3,380,100
-G14,Quadra 1-4,510,100
-G15,Quadra 1-5,640,100
-G16,Quadra 1-6,770,100
-G21,Quadra 2-1,120,220
-G22,Quadra 2-2,250,220
-G23,Quadra 2-3,380,220
-G24,Quadra 2-4,510,220
-G25,Quadra 2-5,640,220
-G26,Quadra 2-6,770,220
-G31,Quadra 3-1,120,340
-G32,Quadra 3-2,250,340
-G33,Quadra 3-3,380,340
-G34,Quadra 3-4,510,340
-G35,Quadra 3-5,640,340
-G36,Quadra 3-6,770,340
-G41,Quadra 4-1,120,460
-G42,Quadra 4-2,250,460
-G43,Quadra 4-3,380,460
-G44,Quadra 4-4,510,460
-G45,Quadra 4-5,640,460
-G46,Quadra 4-6,770,460
-G51,Quadra 5-1,120,580
-G52,Quadra 5-2,250,580
-G53,Quadra 5-3,380,580
-G54,Quadra 5-4,510,580
-G55,Quadra 5-5,640,580
-G56,Quadra 5-6,770,580
-G61,Quadra 6-1,120,700
-G62,Quadra 6-2,250,700
-G63,Quadra 6-3,380,700
-G64,Quadra 6-4,510,700
-G65,Quadra 6-5,640,700
-G66,Quadra 6-6,770,700
+G11,Caixa de distribuição 1-1,120,100
+G12,Caixa de distribuição 1-2,250,100
+G13,Caixa de distribuição 1-3,380,100
+G14,Caixa de distribuição 1-4,510,100
+G15,Caixa de distribuição 1-5,640,100
+G16,Caixa de distribuição 1-6,770,100
+G21,Caixa de distribuição 2-1,120,220
+G22,Caixa de distribuição 2-2,250,220
+G23,Caixa de distribuição 2-3,380,220
+G24,Caixa de distribuição 2-4,510,220
+G25,Caixa de distribuição 2-5,640,220
+G26,Caixa de distribuição 2-6,770,220
+G31,Caixa de distribuição 3-1,120,340
+G32,Caixa de distribuição 3-2,250,340
+G33,Caixa de distribuição 3-3,380,340
+G34,Caixa de distribuição 3-4,510,340
+G35,Caixa de distribuição 3-5,640,340
+G36,Caixa de distribuição 3-6,770,340
+G41,Caixa de distribuição 4-1,120,460
+G42,Caixa de distribuição 4-2,250,460
+G43,Caixa de distribuição 4-3,380,460
+G44,Caixa de distribuição 4-4,510,460
+G45,Caixa de distribuição 4-5,640,460
+G46,Caixa de distribuição 4-6,770,460
+G51,Caixa de distribuição 5-1,120,580
+G52,Caixa de distribuição 5-2,250,580
+G53,Caixa de distribuição 5-3,380,580
+G54,Caixa de distribuição 5-4,510,580
+G55,Caixa de distribuição 5-5,640,580
+G56,Caixa de distribuição 5-6,770,580
+G61,Caixa de distribuição 6-1,120,700
+G62,Caixa de distribuição 6-2,250,700
+G63,Caixa de distribuição 6-3,380,700
+G64,Caixa de distribuição 6-4,510,700
+G65,Caixa de distribuição 6-5,640,700
+G66,Caixa de distribuição 6-6,770,700
