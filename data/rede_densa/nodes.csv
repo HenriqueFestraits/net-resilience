@@ -1,37 +1,37 @@
 ﻿id,label,x,y
-G11,Caixa de distribuição 1-1,120,100
-G12,Caixa de distribuição 1-2,250,100
-G13,Caixa de distribuição 1-3,380,100
-G14,Caixa de distribuição 1-4,510,100
-G15,Caixa de distribuição 1-5,640,100
-G16,Caixa de distribuição 1-6,770,100
-G21,Caixa de distribuição 2-1,120,220
-G22,Caixa de distribuição 2-2,250,220
-G23,Caixa de distribuição 2-3,380,220
-G24,Caixa de distribuição 2-4,510,220
-G25,Caixa de distribuição 2-5,640,220
-G26,Caixa de distribuição 2-6,770,220
-G31,Caixa de distribuição 3-1,120,340
-G32,Caixa de distribuição 3-2,250,340
-G33,Caixa de distribuição 3-3,380,340
-G34,Caixa de distribuição 3-4,510,340
-G35,Caixa de distribuição 3-5,640,340
-G36,Caixa de distribuição 3-6,770,340
-G41,Caixa de distribuição 4-1,120,460
-G42,Caixa de distribuição 4-2,250,460
-G43,Caixa de distribuição 4-3,380,460
-G44,Caixa de distribuição 4-4,510,460
-G45,Caixa de distribuição 4-5,640,460
-G46,Caixa de distribuição 4-6,770,460
-G51,Caixa de distribuição 5-1,120,580
-G52,Caixa de distribuição 5-2,250,580
-G53,Caixa de distribuição 5-3,380,580
-G54,Caixa de distribuição 5-4,510,580
-G55,Caixa de distribuição 5-5,640,580
-G56,Caixa de distribuição 5-6,770,580
-G61,Caixa de distribuição 6-1,120,700
-G62,Caixa de distribuição 6-2,250,700
-G63,Caixa de distribuição 6-3,380,700
-G64,Caixa de distribuição 6-4,510,700
-G65,Caixa de distribuição 6-5,640,700
-G66,Caixa de distribuição 6-6,770,700
+G11,Caixa 1-1,120,100
+G12,Caixa 1-2,250,100
+G13,Caixa 1-3,380,100
+G14,Caixa 1-4,510,100
+G15,Caixa 1-5,640,100
+G16,Caixa 1-6,770,100
+G21,Caixa 2-1,120,220
+G22,Caixa 2-2,250,220
+G23,Caixa 2-3,380,220
+G24,Caixa 2-4,510,220
+G25,Caixa 2-5,640,220
+G26,Caixa 2-6,770,220
+G31,Caixa 3-1,120,340
+G32,Caixa 3-2,250,340
+G33,Caixa 3-3,380,340
+G34,Caixa 3-4,510,340
+G35,Caixa 3-5,640,340
+G36,Caixa 3-6,770,340
+G41,Caixa 4-1,120,460
+G42,Caixa 4-2,250,460
+G43,Caixa 4-3,380,460
+G44,Caixa 4-4,510,460
+G45,Caixa 4-5,640,460
+G46,Caixa 4-6,770,460
+G51,Caixa 5-1,120,580
+G52,Caixa 5-2,250,580
+G53,Caixa 5-3,380,580
+G54,Caixa 5-4,510,580
+G55,Caixa 5-5,640,580
+G56,Caixa 5-6,770,580
+G61,Caixa 6-1,120,700
+G62,Caixa 6-2,250,700
+G63,Caixa 6-3,380,700
+G64,Caixa 6-4,510,700
+G65,Caixa 6-5,640,700
+G66,Caixa 6-6,770,700
