@@ -31,4 +31,4 @@ Os pesos são valores sintéticos de latência estimada em milissegundos (ms) po
 - Remover FEEDER-01: os clientes das CTOs 01 e 02 perdem o caminho até o gateway, enquanto os demais ramos permanecem conectados.
 
 ## Importação
-Na aplicação, importe nodes.csv e edges.csv desta pasta como um par. Selecione GW-01 como origem nas análises de caminho. A aplicação ainda não identifica automaticamente o gateway pelo ID.
+Na aplicação, importe nodes.csv e edges.csv desta pasta como um par. Selecione GW-01 no campo “Gateway de internet / origem” para executar as análises de rota e gerar o relatório de impacto sobre os clientes. O gateway é selecionado pelo usuário, não identificado automaticamente pelo ID.
