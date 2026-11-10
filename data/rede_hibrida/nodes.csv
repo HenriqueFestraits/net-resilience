@@ -1,43 +1,43 @@
-﻿id,label,x,y
-C01,Central 01,600,350
-C02,Central 02,740,420
-C03,Central 03,770,520
-C04,Central 04,740,620
-C05,Central 05,600,690
-C06,Central 06,460,620
-C07,Central 07,430,520
-C08,Central 08,460,420
-C09,Central 09,600,520
-C10,Central 10,650,590
-N01,Norte - Entrada,760,250
-N02,Norte - Caixa A,680,160
-N03,Norte - Caixa B,840,160
-N04,Norte - Principal,960,160
-N05,Norte - Caixa C,910,70
-N06,Norte - Caixa D,1010,70
-S01,Sul - Entrada,600,850
-S02,Sul - Caixa A,500,940
-S03,Sul - Caixa B,700,940
-S04,Sul - Principal,700,1050
-S05,Sul - Caixa C,640,1140
-S06,Sul - Caixa D,770,1140
-W01,Oeste - Entrada,250,520
-W02,Oeste - Caixa A,170,440
-W03,Oeste - Principal,170,600
-W04,Oeste - Caixa B,70,600
-W05,Oeste - Caixa C,25,520
-W06,Oeste - Caixa D,25,680
-A01,Aeroporto - Entrada,300,250
-A02,Aeroporto - Caixa A,220,170
-A03,Aeroporto - Caixa B,140,250
-A04,Aeroporto - Caixa C,220,330
-E01,Leste - Entrada A,950,420
-E02,Leste - Caixa A,1100,420
-E03,Leste - Caixa B,1180,520
-E04,Leste - Entrada B,1100,620
-E05,Leste - Caixa C,950,620
-E06,Leste - Caixa D,900,520
-P01,Porto - Entrada A,850,800
-P02,Porto - Caixa A,1000,800
-P03,Porto - Entrada B,1000,950
-P04,Porto - Caixa B,850,950
+id,label,dependent_devices,x,y
+C01,Central 01,25,600,350
+C02,Central 02,42,740,420
+C03,Central 03,59,770,520
+C04,Central 04,76,740,620
+C05,Central 05,93,600,690
+C06,Central 06,17,460,620
+C07,Central 07,34,430,520
+C08,Central 08,51,460,420
+C09,Central 09,68,600,520
+C10,Central 10,85,650,590
+N01,Norte - Entrada,9,760,250
+N02,Norte - Caixa A,26,680,160
+N03,Norte - Caixa B,43,840,160
+N04,Norte - Principal,60,960,160
+N05,Norte - Caixa C,77,910,70
+N06,Norte - Caixa D,94,1010,70
+S01,Sul - Entrada,18,600,850
+S02,Sul - Caixa A,35,500,940
+S03,Sul - Caixa B,52,700,940
+S04,Sul - Principal,69,700,1050
+S05,Sul - Caixa C,86,640,1140
+S06,Sul - Caixa D,10,770,1140
+W01,Oeste - Entrada,27,250,520
+W02,Oeste - Caixa A,44,170,440
+W03,Oeste - Principal,61,170,600
+W04,Oeste - Caixa B,78,70,600
+W05,Oeste - Caixa C,95,25,520
+W06,Oeste - Caixa D,19,25,680
+A01,Aeroporto - Entrada,36,300,250
+A02,Aeroporto - Caixa A,53,220,170
+A03,Aeroporto - Caixa B,70,140,250
+A04,Aeroporto - Caixa C,87,220,330
+E01,Leste - Entrada A,11,950,420
+E02,Leste - Caixa A,28,1100,420
+E03,Leste - Caixa B,45,1180,520
+E04,Leste - Entrada B,62,1100,620
+E05,Leste - Caixa C,79,950,620
+E06,Leste - Caixa D,96,900,520
+P01,Porto - Entrada A,20,850,800
+P02,Porto - Caixa A,37,1000,800
+P03,Porto - Entrada B,54,1000,950
+P04,Porto - Caixa B,71,850,950
