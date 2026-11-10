@@ -4,6 +4,7 @@ public class Node {
 
     private final String id;
     private final String label;
+    private final int dependentDevices;
 
     private final double x;
     private final double y;
@@ -12,10 +13,32 @@ public class Node {
     public Node(String id, String label) {
         this.id = id;
         this.label = label;
+        this.dependentDevices = 0;
 
         this.x = 0.0;
         this.y = 0.0;
         this.hasPosition = false;
+    }
+
+    public Node(String id, String label, int dependentDevices) {
+        if (dependentDevices < 0) throw new IllegalArgumentException("Dependent device count cannot be negative");
+        this.id = id;
+        this.label = label;
+        this.dependentDevices = dependentDevices;
+        this.x = 0.0;
+        this.y = 0.0;
+        this.hasPosition = false;
+    }
+
+    public Node(String id, String label, int dependentDevices, double x, double y) {
+        if (dependentDevices < 0) throw new IllegalArgumentException("Dependent device count cannot be negative");
+        if (!Double.isFinite(x) || !Double.isFinite(y)) throw new IllegalArgumentException("Node coordinates must be finite numbers");
+        this.id = id;
+        this.label = label;
+        this.dependentDevices = dependentDevices;
+        this.x = x;
+        this.y = y;
+        this.hasPosition = true;
     }
 
     public Node(String id, String label, double x, double y) {
@@ -28,6 +51,7 @@ public class Node {
 
         this.id = id;
         this.label = label;
+        this.dependentDevices = 0;
 
         this.x = x;
         this.y = y;
@@ -40,6 +64,10 @@ public class Node {
 
     public String getLabel() {
         return label;
+    }
+
+    public int getDependentDevices() {
+        return dependentDevices;
     }
 
     /**
