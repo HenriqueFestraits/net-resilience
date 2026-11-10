@@ -15,6 +15,7 @@ import com.henrique.netresilience.model.graph.Graph;
 import com.henrique.netresilience.model.graph.Node;
 import com.henrique.netresilience.model.result.ConnectedComponentsResult;
 import com.henrique.netresilience.model.result.CriticalElementsResult;
+import com.henrique.netresilience.model.result.CustomerImpactResult;
 
 /**
  * Produces a consolidated topological assessment and ranks hypothetical
@@ -31,6 +32,7 @@ public final class NetworkAssessmentService {
 
     private final TarjanAnalysis tarjan = new TarjanAnalysis();
     private final ConnectedComponents connectedComponents = new ConnectedComponents();
+    private final CustomerImpactAnalysisService customerImpactService = new CustomerImpactAnalysisService();
 
     /**
      * Generates a report for the planned topology and, when failures are selected,
@@ -42,6 +44,22 @@ public final class NetworkAssessmentService {
             Set<String> unavailableNodeIds,
             Set<String> unavailableEdgeIds,
             Set<String> hypotheticalEdgeIds
+    ) {
+        return generateReport(originalGraph, plannedGraph, unavailableNodeIds,
+                unavailableEdgeIds, hypotheticalEdgeIds, null);
+    }
+
+    /**
+     * Generates the integrated report and estimates customer impact relative
+     * to the selected Internet gateway. Edge weights are interpreted as ms.
+     */
+    public String generateReport(
+            Graph originalGraph,
+            Graph plannedGraph,
+            Set<String> unavailableNodeIds,
+            Set<String> unavailableEdgeIds,
+            Set<String> hypotheticalEdgeIds,
+            String gatewayNodeId
     ) {
         if (originalGraph == null || plannedGraph == null) {
             throw new IllegalArgumentException("Original and planned graphs cannot be null.");
@@ -102,7 +120,59 @@ public final class NetworkAssessmentService {
             output.append("\nB) CENÁRIO DE FALHAS\n");
             output.append("Nenhuma falha selecionada. A análise operacional coincide com a topologia planejada.\n");
         }
+
+        appendCustomerImpactSection(output, plannedGraph, operationalGraph, gatewayNodeId);
         return output.toString();
+    }
+
+    private void appendCustomerImpactSection(
+            StringBuilder output,
+            Graph plannedGraph,
+            Graph operationalGraph,
+            String gatewayNodeId
+    ) {
+        output.append("\nC) IMPACTO SOBRE OS CLIENTES\n");
+        output.append("========================================\n");
+
+        if (gatewayNodeId == null || gatewayNodeId.isBlank()) {
+            output.append("Análise não realizada: selecione o gateway de internet no campo de origem.\n");
+            return;
+        }
+
+        CustomerImpactResult impact = customerImpactService.analyze(
+                plannedGraph, operationalGraph, gatewayNodeId);
+
+        output.append("Gateway de referência: ").append(gatewayNodeId).append("\n");
+        output.append("Clientes considerados: ").append(impact.getTotalCustomers()).append("\n\n");
+
+        output.append("1. CLIENTES SEM ACESSO À INTERNET\n");
+        output.append("   Clientes desconectados: ")
+                .append(impact.getCustomersWithoutInternet()).append("\n");
+        output.append("   CTOs desconectadas: ")
+                .append(impact.getDisconnectedAccessPoints()).append("\n\n");
+
+        output.append("2. CLIENTES COM AUMENTO DE LATÊNCIA\n");
+        output.append("   Clientes prejudicados: ")
+                .append(impact.getCustomersWithIncreasedLatency()).append("\n");
+        output.append("   CTOs com aumento de latência ou desconexão: ")
+                .append(impact.getAffectedAccessPoints()).append("\n");
+        output.append("   Aumento médio entre clientes prejudicados: ")
+                .append(formatMilliseconds(impact.getAverageAdditionalLatencyMs())).append("\n\n");
+
+        output.append("3. LATÊNCIA DOS CLIENTES CONECTADOS\n");
+        output.append("   Clientes ainda conectados: ")
+                .append(impact.getConnectedCustomers()).append("\n");
+        output.append("   Latência média ponderada: ")
+                .append(formatMilliseconds(impact.getAverageConnectedLatencyMs())).append("\n");
+
+        output.append("\nCritério: menor latência acumulada entre o gateway e cada CTO, ");
+        output.append("ponderada pela quantidade de clientes cadastrada em dependent_devices.\n");
+        output.append("Clientes sem rota após as falhas são classificados como desconectados; ");
+        output.append("o aumento de latência é calculado apenas para clientes que continuam conectados.\n");
+    }
+
+    private String formatMilliseconds(double value) {
+        return String.format(java.util.Locale.ROOT, "%.2f ms", value);
     }
 
     private Graph buildOperationalGraph(Graph source, FailureScenario scenario) {
