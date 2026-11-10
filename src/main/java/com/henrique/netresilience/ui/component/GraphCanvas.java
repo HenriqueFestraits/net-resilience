@@ -540,6 +540,14 @@ public final class GraphCanvas extends Region {
                     y + NODE_RADIUS + 14,
                     130
             );
+
+            gc.setFont(Font.font("System", 10));
+            gc.setFill(Color.web("#93c5fd"));
+            String deviceCount = node.hasDependentDeviceCount()
+                    ? String.valueOf(node.getDependentDevices())
+                    : "N/D";
+            gc.fillText("Dispositivos: " + deviceCount,
+                    x, y + NODE_RADIUS + 27, 130);
         }
     }
 
