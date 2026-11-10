@@ -70,6 +70,7 @@ public final class GraphCanvas extends Region {
 
     private Set<String> originalRouteEdgeIds = Set.of();
     private Set<String> affectedRouteEdgeIds = Set.of();
+    private Set<String> hypotheticalEdgeIds = Set.of();
 
     private String hypotheticalSourceId;
     private String hypotheticalTargetId;
@@ -125,6 +126,11 @@ public final class GraphCanvas extends Region {
         this.unavailableNodeIds = Set.copyOf(nodeIds);
         this.unavailableEdgeIds = Set.copyOf(edgeIds);
 
+        redraw();
+    }
+
+    public void setHypotheticalEdgeIds(Set<String> edgeIds) {
+        this.hypotheticalEdgeIds = Set.copyOf(edgeIds);
         redraw();
     }
 
@@ -383,12 +389,19 @@ public final class GraphCanvas extends Region {
 
                 edgeColor = AFFECTED_ROUTE_COLOR;
 
+            } else if (hypotheticalEdgeIds.contains(edge.getId())) {
+                edgeColor = Color.web("#f59e0b");
             } else if (originalRouteEdgeIds.contains(edge.getId())) {
 
                 edgeColor = ORIGINAL_ROUTE_COLOR;
             }
 
             gc.setStroke(edgeColor);
+            if (hypotheticalEdgeIds.contains(edge.getId()) && !unavailable) {
+                gc.setLineDashes(8.0, 5.0);
+            } else {
+                gc.setLineDashes();
+            }
 
             gc.strokeLine(
                     startX,
@@ -396,6 +409,7 @@ public final class GraphCanvas extends Region {
                     endX,
                     endY
             );
+            gc.setLineDashes();
 
             double middleX =
                     (source.getX() + target.getX()) / 2.0;
