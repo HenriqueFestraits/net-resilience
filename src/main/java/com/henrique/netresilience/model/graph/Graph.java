@@ -17,6 +17,14 @@ public final class Graph {
         return registerNode(new Node(id, label));
     }
 
+    public Node addNode(String id, String label, int dependentDevices) {
+        return registerNode(new Node(id, label, dependentDevices));
+    }
+
+    public Node addNode(String id, String label, int dependentDevices, double x, double y) {
+        return registerNode(new Node(id, label, dependentDevices, x, y));
+    }
+
     // Add a node with explicit visual coordinates.
     public Node addNode(String id, String label, double x, double y) {
         return registerNode(new Node(id, label, x, y));
