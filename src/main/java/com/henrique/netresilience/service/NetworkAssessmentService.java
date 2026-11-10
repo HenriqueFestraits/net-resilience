@@ -50,7 +50,7 @@ public final class NetworkAssessmentService {
         report.append("Enlaces: ").append(graph.edgeCount()).append("\n");
         report.append("Soma das contagens de dispositivos dependentes: ")
                 .append(totalDependentDevices)
-                .append(" (pode haver sobreposição entre nós)\\n");
+                .append(" (pode haver sobreposição entre nós)\n");
         report.append("Componentes conexos: ")
                 .append(components.getComponentCount()).append("\n\n");
 
@@ -113,13 +113,13 @@ public final class NetworkAssessmentService {
         report.append("\n5. SUGESTÕES DE REDUNDÂNCIA\n");
         List<Candidate> candidates = findCandidates(graph, critical, components.getComponentCount());
         if (candidates.isEmpty()) {
-            report.append("Não foi encontrada conexão candidata que reduza a quantidade de pontes ou pontos de articulação.\n");
+            report.append("Não foi encontrada conexão candidata que melhore os indicadores topológicos avaliados.\n");
         } else {
             int rank = 1;
             for (Candidate candidate : candidates) {
                 report.append(rank++).append(") ").append(candidate.source.getId())
                         .append(" <-> ").append(candidate.target.getId())
-                        .append(" [prioridade ").append(candidate.priority).append("]\n");
+                        .append(" [prioridade ").append(candidate.priorityLabel()).append("]\n");
                 report.append("   Componentes: ").append(candidate.beforeComponents)
                         .append(" -> ").append(candidate.afterComponents)
                         .append("; pontes: ").append(candidate.beforeBridges)
