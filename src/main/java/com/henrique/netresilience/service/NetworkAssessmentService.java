@@ -40,13 +40,15 @@ public final class NetworkAssessmentService {
             Graph originalGraph,
             Graph plannedGraph,
             Set<String> unavailableNodeIds,
-            Set<String> unavailableEdgeIds
+            Set<String> unavailableEdgeIds,
+            Set<String> hypotheticalEdgeIds
     ) {
         if (originalGraph == null || plannedGraph == null) {
             throw new IllegalArgumentException("Original and planned graphs cannot be null.");
         }
-        if (unavailableNodeIds == null || unavailableEdgeIds == null) {
-            throw new IllegalArgumentException("Failure selections cannot be null.");
+        if (unavailableNodeIds == null || unavailableEdgeIds == null
+                || hypotheticalEdgeIds == null) {
+            throw new IllegalArgumentException("Failure selections and hypothetical link IDs cannot be null.");
         }
 
         FailureScenario scenario = new FailureScenario();
@@ -72,7 +74,13 @@ public final class NetworkAssessmentService {
         output.append("Topologia planejada: ").append(plannedGraph.nodeCount())
                 .append(" equipamentos / ").append(plannedGraph.edgeCount()).append(" enlaces\n");
         output.append("Conexões hipotéticas adicionadas: ")
-                .append(plannedGraph.edgeCount() - originalGraph.edgeCount()).append("\n");
+                .append(hypotheticalEdgeIds.size()).append("\n");
+        for (String edgeId : hypotheticalEdgeIds) {
+            if (plannedGraph.findEdge(edgeId).isEmpty()) {
+                throw new IllegalArgumentException("Unknown hypothetical edge: " + edgeId);
+            }
+            output.append("  - ").append(edgeId).append("\n");
+        }
         output.append("Falhas selecionadas: ").append(scenario.getUnavailableNodeIds().size())
                 .append(" equipamento(s), ").append(scenario.getUnavailableEdgeIds().size())
                 .append(" enlace(s)\n\n");
