@@ -88,6 +88,19 @@ mvn clean package
 java -cp target/classes com.henrique.netresilience.demo.SimulationDemo
 ```
 
+### 7. Topologia planejada e cenários integrados de falha
+
+A aplicação mantém duas representações separadas:
+
+- **Topologia original:** exatamente a infraestrutura importada dos CSVs.
+- **Topologia planejada:** cópia da original que recebe os enlaces hipotéticos aceitos pelo usuário.
+
+As conexões hipotéticas aparecem tracejadas em amarelo no Canvas e passam a integrar a topologia planejada. Elas podem ser selecionadas como enlaces indisponíveis e são consideradas pelo Dijkstra, Tarjan, BFS e pelas métricas da simulação de falhas.
+
+O botão **Avaliar rede e gerar relatório** apresenta a análise da topologia planejada e, quando existem falhas selecionadas, acrescenta uma avaliação da topologia operacional restante. Assim, o relatório diferencia infraestrutura importada, conexões propostas e falhas simuladas.
+
+Limpar as falhas não remove as conexões hipotéticas. Reimportar os CSVs reinicia o planejamento e descarta as propostas anteriores. A topologia original nunca é modificada por essas operações.
+
 ## Formato dos arquivos CSV
 
 - nodes.csv: id,label ou id,label,x,y.
