@@ -623,6 +623,8 @@ public final class NetResilienceApplication extends Application {
                 Set.of()
         );
 
+        graphCanvas.clearHypotheticalConnection();
+
         failureSelectionLabel.setText(
                 "Nenhuma falha selecionada"
         );
@@ -768,6 +770,7 @@ public final class NetResilienceApplication extends Application {
             double weight = Double.parseDouble(weightText.get().trim());
             RedundancyAnalysisResult result = redundancyService.analyze(
                     graph, edgeId.get().trim(), sourceId, targetId, weight);
+            graphCanvas.setHypotheticalConnection(sourceId, targetId);
             StringBuilder output = new StringBuilder();
             output.append("ANÁLISE DE CONEXÃO REDUNDANTE HIPOTÉTICA\n");
             output.append("========================================\n");
