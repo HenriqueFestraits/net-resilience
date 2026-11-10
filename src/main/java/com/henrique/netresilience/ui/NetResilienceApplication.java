@@ -25,10 +25,12 @@ import com.henrique.netresilience.model.result.CriticalElementsResult;
 import com.henrique.netresilience.model.result.FailureSimulationResult;
 import com.henrique.netresilience.model.result.NetworkResilienceMetrics;
 import com.henrique.netresilience.model.result.RouteResult;
+import com.henrique.netresilience.model.result.RedundancyAnalysisResult;
 
 import com.henrique.netresilience.model.scenario.FailureScenario;
 
 import com.henrique.netresilience.service.FailureSimulationService;
+import com.henrique.netresilience.service.RedundancyAnalysisService;
 
 import com.henrique.netresilience.ui.component.GraphCanvas;
 
@@ -46,6 +48,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextInputDialog;
 
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -63,6 +66,9 @@ public final class NetResilienceApplication extends Application {
 
     private final FailureSimulationService simulationService =
             new FailureSimulationService();
+
+    private final RedundancyAnalysisService redundancyService =
+            new RedundancyAnalysisService();
 
     private final GraphCanvas graphCanvas =
             new GraphCanvas();
@@ -102,6 +108,9 @@ public final class NetResilienceApplication extends Application {
 
     private final Button clearFailuresButton =
             createSecondaryButton("Limpar falhas");
+
+    private final Button analyzeRedundancyButton =
+            createSecondaryButton("Avaliar conexão redundante");
 
     private Graph graph;
 
@@ -158,7 +167,7 @@ public final class NetResilienceApplication extends Application {
         );
 
         Label subtitle = new Label(
-                "Network analysis and resilience simulation"
+                "Análise de resiliência de redes de telecomunicações"
         );
 
         subtitle.setStyle(
@@ -231,8 +240,8 @@ public final class NetResilienceApplication extends Application {
 
         Label routeTitle = createTitle("Análise de rota");
 
-        sourceSelector.setPromptText("Estação de origem");
-        targetSelector.setPromptText("Estação de destino");
+        sourceSelector.setPromptText("Ponto de origem");
+        targetSelector.setPromptText("Ponto de destino");
 
         sourceSelector.setMaxWidth(Double.MAX_VALUE);
         targetSelector.setMaxWidth(Double.MAX_VALUE);
@@ -248,7 +257,7 @@ public final class NetResilienceApplication extends Application {
         Label failureTitle = createTitle("Simulação de falhas");
 
         Label instructions = new Label(
-                "Clique em uma estação ou conexão no grafo " +
+                "Clique em um equipamento ou enlace no grafo " +
                 "para alternar sua disponibilidade."
         );
 
@@ -269,15 +278,21 @@ public final class NetResilienceApplication extends Application {
                 event -> runSimulation()
         );
 
+        analyzeRedundancyButton.setOnAction(
+                event -> runRedundancyAnalysis()
+        );
+
         simulateButton.setDisable(true);
         clearFailuresButton.setDisable(true);
+        analyzeRedundancyButton.setDisable(true);
 
         VBox failureSection = new VBox(
                 10,
                 instructions,
                 failureSelectionLabel,
                 clearFailuresButton,
-                simulateButton
+                simulateButton,
+                analyzeRedundancyButton
         );
 
         Label resultTitle = createTitle("Resultados");
@@ -514,6 +529,7 @@ public final class NetResilienceApplication extends Application {
 
             simulateButton.setDisable(false);
             clearFailuresButton.setDisable(false);
+            analyzeRedundancyButton.setDisable(false);
 
             statusLabel.setText(
                     "Rede carregada com sucesso. " +
@@ -528,6 +544,7 @@ public final class NetResilienceApplication extends Application {
 
             simulateButton.setDisable(true);
             clearFailuresButton.setDisable(true);
+            analyzeRedundancyButton.setDisable(true);
 
             graphInfoLabel.setText("Nenhuma rede carregada.");
 
@@ -652,8 +669,8 @@ public final class NetResilienceApplication extends Application {
                         : String.join(", ", unavailableEdgeIds);
 
         failureSelectionLabel.setText(
-                "Estações: " + unavailableNodes +
-                "\nConexões: " + unavailableEdges
+                "Equipamentos: " + unavailableNodes +
+                "\nEnlaces: " + unavailableEdges
         );
     }
 
@@ -718,6 +735,64 @@ public final class NetResilienceApplication extends Application {
                     "Erro na simulação",
                     exception.getMessage()
             );
+        }
+    }
+
+    private void runRedundancyAnalysis() {
+        if (graph == null) {
+            showError("Análise indisponível", "Importe uma infraestrutura antes de continuar.");
+            return;
+        }
+        String sourceId = sourceSelector.getValue();
+        String targetId = targetSelector.getValue();
+        if (sourceId == null || targetId == null || sourceId.equals(targetId)) {
+            showError("Pontos inválidos", "Selecione dois pontos diferentes para avaliar a nova conexão.");
+            return;
+        }
+
+        TextInputDialog idDialog = new TextInputDialog("REDUNDANT_LINK_01");
+        idDialog.setTitle("Planejamento de redundância");
+        idDialog.setHeaderText("Identificação do enlace hipotético");
+        idDialog.setContentText("ID da nova conexão:");
+        Optional<String> edgeId = idDialog.showAndWait();
+        if (edgeId.isEmpty()) return;
+
+        TextInputDialog weightDialog = new TextInputDialog("1.0");
+        weightDialog.setTitle("Planejamento de redundância");
+        weightDialog.setHeaderText("Peso do enlace hipotético");
+        weightDialog.setContentText("Peso/custo abstrato da conexão:");
+        Optional<String> weightText = weightDialog.showAndWait();
+        if (weightText.isEmpty()) return;
+
+        try {
+            double weight = Double.parseDouble(weightText.get().trim());
+            RedundancyAnalysisResult result = redundancyService.analyze(
+                    graph, edgeId.get().trim(), sourceId, targetId, weight);
+            StringBuilder output = new StringBuilder();
+            output.append("ANÁLISE DE CONEXÃO REDUNDANTE HIPOTÉTICA\n");
+            output.append("========================================\n");
+            output.append("Nova conexão: ").append(sourceId).append(" <-> ")
+                    .append(targetId).append(" (").append(edgeId.get().trim()).append(")\n");
+            output.append("Peso informado: ").append(weight).append("\n\n");
+            output.append("INDICADORES ESTRUTURAIS\n");
+            output.append("Pontes: ").append(result.getBridgeCountBefore())
+                    .append(" -> ").append(result.getBridgeCountAfter()).append("\n");
+            output.append("Pontos de articulação: ")
+                    .append(result.getArticulationPointCountBefore())
+                    .append(" -> ").append(result.getArticulationPointCountAfter()).append("\n");
+            output.append("Componentes conexos: ").append(result.getComponentCountBefore())
+                    .append(" -> ").append(result.getComponentCountAfter()).append("\n\n");
+            output.append("Redução de pontes: ").append(result.getBridgeCountReduction()).append("\n");
+            output.append("Redução de pontos de articulação: ")
+                    .append(result.getArticulationPointCountReduction()).append("\n\n");
+            output.append("A infraestrutura original não foi alterada.\n");
+            output.append("A viabilidade física (capacidade, portas, orçamento óptico e rota de fibra) precisa ser validada separadamente.");
+            resultArea.setText(output.toString());
+            statusLabel.setText("Análise concluída. A conexão avaliada é hipotética.");
+        } catch (NumberFormatException exception) {
+            showError("Peso inválido", "Informe um número válido para o peso da conexão.");
+        } catch (IllegalArgumentException exception) {
+            showError("Não foi possível avaliar a conexão", exception.getMessage());
         }
     }
 
