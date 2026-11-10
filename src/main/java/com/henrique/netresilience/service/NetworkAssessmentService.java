@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.henrique.netresilience.model.scenario.FailureScenario;
+
 import com.henrique.netresilience.algorithm.connectivity.ConnectedComponents;
 import com.henrique.netresilience.algorithm.connectivity.TarjanAnalysis;
 import com.henrique.netresilience.model.graph.Edge;
@@ -29,6 +31,99 @@ public final class NetworkAssessmentService {
 
     private final TarjanAnalysis tarjan = new TarjanAnalysis();
     private final ConnectedComponents connectedComponents = new ConnectedComponents();
+
+    /**
+     * Generates a report for the planned topology and, when failures are selected,
+     * a second assessment of the remaining operational topology.
+     */
+    public String generateReport(
+            Graph originalGraph,
+            Graph plannedGraph,
+            Set<String> unavailableNodeIds,
+            Set<String> unavailableEdgeIds
+    ) {
+        if (originalGraph == null || plannedGraph == null) {
+            throw new IllegalArgumentException("Original and planned graphs cannot be null.");
+        }
+        if (unavailableNodeIds == null || unavailableEdgeIds == null) {
+            throw new IllegalArgumentException("Failure selections cannot be null.");
+        }
+
+        FailureScenario scenario = new FailureScenario();
+        unavailableNodeIds.forEach(id -> {
+            if (plannedGraph.findNode(id).isEmpty()) {
+                throw new IllegalArgumentException("Unknown unavailable node: " + id);
+            }
+            scenario.addUnavailableNode(id);
+        });
+        unavailableEdgeIds.forEach(id -> {
+            if (plannedGraph.findEdge(id).isEmpty()) {
+                throw new IllegalArgumentException("Unknown unavailable edge: " + id);
+            }
+            scenario.addUnavailableEdge(id);
+        });
+
+        Graph operationalGraph = buildOperationalGraph(plannedGraph, scenario);
+        StringBuilder output = new StringBuilder();
+        output.append("NETRESILIENCE — RELATÓRIO INTEGRADO\n");
+        output.append("========================================\n");
+        output.append("Infraestrutura original: ").append(originalGraph.nodeCount())
+                .append(" equipamentos / ").append(originalGraph.edgeCount()).append(" enlaces\n");
+        output.append("Topologia planejada: ").append(plannedGraph.nodeCount())
+                .append(" equipamentos / ").append(plannedGraph.edgeCount()).append(" enlaces\n");
+        output.append("Conexões hipotéticas adicionadas: ")
+                .append(plannedGraph.edgeCount() - originalGraph.edgeCount()).append("\n");
+        output.append("Falhas selecionadas: ").append(scenario.getUnavailableNodeIds().size())
+                .append(" equipamento(s), ").append(scenario.getUnavailableEdgeIds().size())
+                .append(" enlace(s)\n\n");
+
+        output.append("A) AVALIAÇÃO DA TOPOLOGIA PLANEJADA\n");
+        output.append("----------------------------------------\n");
+        output.append(generateReport(plannedGraph));
+
+        if (!scenario.isEmpty()) {
+            output.append("\nB) AVALIAÇÃO APÓS AS FALHAS SELECIONADAS\n");
+            output.append("----------------------------------------\n");
+            output.append("Equipamentos removidos: ")
+                    .append(scenario.getUnavailableNodeIds()).append("\n");
+            output.append("Enlaces indisponíveis: ")
+                    .append(scenario.getUnavailableEdgeIds()).append("\n");
+            output.append("Esta análise considera as conexões hipotéticas ainda disponíveis.\n\n");
+            output.append(generateReport(operationalGraph));
+        } else {
+            output.append("\nB) CENÁRIO DE FALHAS\n");
+            output.append("Nenhuma falha selecionada. A análise operacional coincide com a topologia planejada.\n");
+        }
+        return output.toString();
+    }
+
+    private Graph buildOperationalGraph(Graph source, FailureScenario scenario) {
+        Graph operational = new Graph();
+        for (Node node : source.getNodes()) {
+            if (scenario.isNodeUnavailable(node.getId())) continue;
+            if (node.hasDependentDeviceCount()) {
+                if (node.hasPosition()) {
+                    operational.addNode(node.getId(), node.getLabel(),
+                            node.getDependentDevices(), node.getX(), node.getY());
+                } else {
+                    operational.addNode(node.getId(), node.getLabel(),
+                            node.getDependentDevices());
+                }
+            } else if (node.hasPosition()) {
+                operational.addNode(node.getId(), node.getLabel(),
+                        node.getX(), node.getY());
+            } else {
+                operational.addNode(node.getId(), node.getLabel());
+            }
+        }
+        for (Edge edge : source.getEdges()) {
+            if (scenario.canUseEdge(edge)) {
+                operational.addEdge(edge.getId(), edge.getSource().getId(),
+                        edge.getTarget().getId(), edge.getWeight());
+            }
+        }
+        return operational;
+    }
 
     public String generateReport(Graph graph) {
         if (graph == null) {
