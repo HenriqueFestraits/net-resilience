@@ -17,7 +17,7 @@ A infraestrutura é abstraída como um grafo não direcionado e ponderado:
 - **Peso da aresta**: custo abstrato utilizado pelos algoritmos de caminho mínimo. Nos conjuntos de demonstração, os pesos são ilustrativos e não representam quilômetros nem medições reais.
 - **Coordenadas X/Y**: metadados exclusivamente visuais, utilizados para posicionar os vértices na interface.
 
-A estrutura permite arestas paralelas, úteis para representar conceitualmente enlaces independentes entre os mesmos pontos. A aplicação não modela capacidade, fluxo, clientes atendidos, tecnologia de acesso ou restrições físicas de engenharia.
+A estrutura permite arestas paralelas, úteis para representar conceitualmente enlaces independentes entre os mesmos pontos. A aplicação não modela capacidade, fluxo, tecnologia de acesso ou restrições físicas de engenharia. A quantidade de dispositivos dependentes é um metadado informado no CSV, usado para contextualizar a criticidade operacional; não é inferida pela topologia.
 
 ## Funcionalidades
 
@@ -46,7 +46,15 @@ A classe FailureSimulationService analisa a topologia original, constrói uma c�
 
 Os resultados incluem rotas antes/depois, componentes conexos, pontes, pontos de articulação, disponibilidade de vértices e enlaces e cobertura do maior componente.
 
-### 5. Avaliação de conexão redundante hipotética
+### 5. Relatório de avaliação da rede
+
+O botão **Avaliar rede e gerar relatório** reúne em uma única saída a visão geral da topologia, componentes conexos, pontes, pontos de articulação, equipamentos com maior exposição operacional e sugestões de conexões redundantes.
+
+As sugestões são geradas testando pares de vértices que ainda não possuem ligação direta. Para cada par, o serviço cria uma cópia do grafo, adiciona uma aresta hipotética e compara a quantidade de pontes e pontos de articulação. As sugestões que reduzem esses indicadores são ordenadas por melhoria estrutural e, em caso de empate, pela quantidade de dispositivos informada nos extremos.
+
+A quantidade `dependent_devices` representa dispositivos dependentes informados pelo usuário. Ela não é usada por Tarjan/BFS e não deve ser interpretada como número exato de clientes afetados por uma falha, pois isso exigiria modelar a hierarquia de atendimento.
+
+### 6. Avaliação de conexão redundante hipotética
 
 A classe RedundancyAnalysisService permite avaliar o efeito estrutural de adicionar uma conexão entre dois vértices existentes.
 
