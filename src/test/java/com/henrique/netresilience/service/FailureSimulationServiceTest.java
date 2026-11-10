@@ -443,6 +443,36 @@ class FailureSimulationServiceTest {
         assertEquals(1, metrics.getComponentCountChange());
     }
 
+    @Test
+    void shouldUseHypotheticalLinkWhenSimulatingFailures() {
+        Graph plannedGraph = new Graph();
+        plannedGraph.addNode("A", "Central", 10);
+        plannedGraph.addNode("B", "Distribuidor", 80);
+        plannedGraph.addNode("C", "Caixa", 45);
+        plannedGraph.addEdge("AB", "A", "B", 1.0);
+        plannedGraph.addEdge("BC", "B", "C", 1.0);
+        plannedGraph.addEdge("AC_HYP", "A", "C", 0.5);
+
+        FailureScenario scenario = new FailureScenario();
+        scenario.addUnavailableNode("B");
+
+        FailureSimulationResult result = service.simulate(
+                plannedGraph, "A", "C", scenario);
+
+        assertTrue(result.isRouteAvailableBefore());
+        assertTrue(result.isRouteAvailableAfter());
+        assertEquals(0.5,
+                result.getAffectedRoute().orElseThrow().getTotalWeight(), 0.0001);
+        assertEquals(
+                List.of("AC_HYP"),
+                result.getAffectedRoute().orElseThrow().getEdges()
+                        .stream().map(edge -> edge.getId()).toList());
+        assertEquals(3, result.getResilienceMetrics().getOriginalEdgeCount());
+        assertEquals(1, result.getResilienceMetrics().getAvailableEdgeCount());
+        assertEquals(45,
+                result.getAffectedRoute().orElseThrow().getTarget().getDependentDevices());
+    }
+
     private Graph createLineGraph() {
 
         Graph graph = new Graph();
