@@ -18,6 +18,10 @@ public final class GraphCsvLoader {
 
     private static final List<String> NODE_POSITION_HEADER =
             List.of("id", "label", "x", "y");
+    private static final List<String> NODE_DEVICES_HEADER =
+            List.of("id", "label", "dependent_devices");
+    private static final List<String> NODE_DEVICES_POSITION_HEADER =
+            List.of("id", "label", "dependent_devices", "x", "y");
 
     private static final List<String> EDGE_HEADER =
             List.of("id", "source", "target", "weight");
@@ -44,6 +48,7 @@ public final class GraphCsvLoader {
             int lineNumber = 0;
             boolean headerRead = false;
             boolean hasCoordinates = false;
+            boolean hasDependentDevices = false;
 
             while ((line = reader.readLine()) != null) {
 
@@ -70,6 +75,11 @@ public final class GraphCsvLoader {
 
                     if (fields.equals(NODE_POSITION_HEADER)) {
                         hasCoordinates = true;
+                    } else if (fields.equals(NODE_DEVICES_HEADER)) {
+                        hasDependentDevices = true;
+                    } else if (fields.equals(NODE_DEVICES_POSITION_HEADER)) {
+                        hasDependentDevices = true;
+                        hasCoordinates = true;
                     } else if (!fields.equals(NODE_HEADER)) {
                         validateHeader(
                                 fields,
@@ -83,15 +93,15 @@ public final class GraphCsvLoader {
                     continue;
                 }
 
-                int expectedFields = hasCoordinates ? 4 : 2;
+                int expectedFields = hasDependentDevices ? (hasCoordinates ? 5 : 3) : (hasCoordinates ? 4 : 2);
 
                 if (fields.size() != expectedFields) {
                     throw invalidCsv(
                             file,
                             lineNumber,
-                            hasCoordinates
-                                    ? "Expected 4 fields: id, label, x, y"
-                                    : "Expected 2 fields: id, label"
+                            hasDependentDevices
+                                    ? (hasCoordinates ? "Expected 5 fields: id, label, dependent_devices, x, y" : "Expected 3 fields: id, label, dependent_devices")
+                                    : (hasCoordinates ? "Expected 4 fields: id, label, x, y" : "Expected 2 fields: id, label")
                     );
                 }
 
@@ -109,24 +119,36 @@ public final class GraphCsvLoader {
                         lineNumber
                 );
 
+                int dependentDevices = 0;
+                if (hasDependentDevices) {
+                    try {
+                        dependentDevices = Integer.parseInt(fields.get(2).trim());
+                    } catch (NumberFormatException e) {
+                        throw invalidCsv(file, lineNumber, "Invalid dependent_devices value: " + fields.get(2), e);
+                    }
+                    if (dependentDevices < 0) throw invalidCsv(file, lineNumber, "dependent_devices must be non-negative");
+                }
+
                 if (hasCoordinates) {
 
+                    int coordinateOffset = hasDependentDevices ? 1 : 0;
                     double x = parseCoordinate(
-                            fields.get(2).trim(),
+                            fields.get(2 + coordinateOffset).trim(),
                             "x coordinate",
                             file,
                             lineNumber
                     );
 
                     double y = parseCoordinate(
-                            fields.get(3).trim(),
+                            fields.get(3 + coordinateOffset).trim(),
                             "y coordinate",
                             file,
                             lineNumber
                     );
 
                     try {
-                        graph.addNode(id, label, x, y);
+                        if (hasDependentDevices) graph.addNode(id, label, dependentDevices, x, y);
+                        else graph.addNode(id, label, x, y);
                     } catch (IllegalArgumentException e) {
                         throw invalidCsv(
                                 file,
@@ -139,7 +161,8 @@ public final class GraphCsvLoader {
                 } else {
 
                     try {
-                        graph.addNode(id, label);
+                        if (hasDependentDevices) graph.addNode(id, label, dependentDevices);
+                        else graph.addNode(id, label);
                     } catch (IllegalArgumentException e) {
                         throw invalidCsv(
                                 file,
