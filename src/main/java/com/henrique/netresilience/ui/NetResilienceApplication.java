@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import java.util.LinkedHashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -83,6 +85,9 @@ public final class NetResilienceApplication extends Application {
     private final Set<String> unavailableEdgeIds =
             new LinkedHashSet<>();
 
+    private final Set<String> hypotheticalEdgeIds =
+            new LinkedHashSet<>();
+
     private final ComboBox<String> sourceSelector =
             new ComboBox<>();
 
@@ -120,6 +125,7 @@ public final class NetResilienceApplication extends Application {
             createActionButton("Avaliar rede e gerar relatório");
 
     private Graph graph;
+    private Graph plannedGraph;
 
     private Path nodesFile;
     private Path edgesFile;
@@ -524,10 +530,13 @@ public final class NetResilienceApplication extends Application {
             );
 
             graph = loadedGraph;
+            plannedGraph = copyGraph(graph);
+            hypotheticalEdgeIds.clear();
 
             clearSelectedFailures();
 
-            graphCanvas.setGraph(graph);
+            graphCanvas.setGraph(plannedGraph);
+            graphCanvas.setHypotheticalEdgeIds(hypotheticalEdgeIds);
 
             updateGraphInformation();
 
@@ -546,8 +555,11 @@ public final class NetResilienceApplication extends Application {
         } catch (IOException | IllegalArgumentException exception) {
 
             graph = null;
+            plannedGraph = null;
+            hypotheticalEdgeIds.clear();
 
             graphCanvas.setGraph(null);
+            graphCanvas.setHypotheticalEdgeIds(hypotheticalEdgeIds);
 
             simulateButton.setDisable(true);
             clearFailuresButton.setDisable(true);
@@ -631,7 +643,8 @@ public final class NetResilienceApplication extends Application {
                 Set.of()
         );
 
-        graphCanvas.clearHypotheticalConnection();
+        graphCanvas.setGraph(plannedGraph);
+        graphCanvas.setHypotheticalEdgeIds(hypotheticalEdgeIds);
 
         failureSelectionLabel.setText(
                 "Nenhuma falha selecionada"
@@ -653,8 +666,6 @@ public final class NetResilienceApplication extends Application {
                 Set.of(),
                 Set.of()
         );
-        graphCanvas.clearHypotheticalConnection();
-
         updateFailureSelection();
 
         resultArea.setText(
@@ -687,7 +698,7 @@ public final class NetResilienceApplication extends Application {
 
     private void runSimulation() {
 
-        if (graph == null) {
+        if (graph == null || plannedGraph == null) {
             showError(
                     "Simulação indisponível",
                     "Importe uma rede antes de executar a simulação."
@@ -723,7 +734,7 @@ public final class NetResilienceApplication extends Application {
 
             FailureSimulationResult result =
                     simulationService.simulate(
-                            graph,
+                            plannedGraph,
                             sourceId,
                             targetId,
                             scenario
@@ -749,13 +760,38 @@ public final class NetResilienceApplication extends Application {
         }
     }
 
+    private Graph copyGraph(Graph source) {
+        Graph copy = new Graph();
+        for (Node node : source.getNodes()) {
+            if (node.hasDependentDeviceCount()) {
+                if (node.hasPosition()) {
+                    copy.addNode(node.getId(), node.getLabel(),
+                            node.getDependentDevices(), node.getX(), node.getY());
+                } else {
+                    copy.addNode(node.getId(), node.getLabel(),
+                            node.getDependentDevices());
+                }
+            } else if (node.hasPosition()) {
+                copy.addNode(node.getId(), node.getLabel(), node.getX(), node.getY());
+            } else {
+                copy.addNode(node.getId(), node.getLabel());
+            }
+        }
+        for (Edge edge : source.getEdges()) {
+            copy.addEdge(edge.getId(), edge.getSource().getId(),
+                    edge.getTarget().getId(), edge.getWeight());
+        }
+        return copy;
+    }
+
     private void runNetworkAssessment() {
-        if (graph == null) {
+        if (graph == null || plannedGraph == null) {
             showError("Avaliação indisponível", "Importe uma rede antes de gerar o relatório.");
             return;
         }
         try {
-            String report = assessmentService.generateReport(graph);
+            String report = assessmentService.generateReport(
+                    graph, plannedGraph, unavailableNodeIds, unavailableEdgeIds);
             showReportDialog("Relatório de avaliação da rede", report);
             statusLabel.setText("Relatório de avaliação gerado.");
         } catch (IllegalArgumentException exception) {
@@ -807,9 +843,15 @@ public final class NetResilienceApplication extends Application {
 
         try {
             double weight = Double.parseDouble(weightText.get().trim());
+            String proposedEdgeId = edgeId.get().trim();
             RedundancyAnalysisResult result = redundancyService.analyze(
-                    graph, edgeId.get().trim(), sourceId, targetId, weight);
-            graphCanvas.setHypotheticalConnection(sourceId, targetId);
+                    plannedGraph, proposedEdgeId, sourceId, targetId, weight);
+
+            // Commit the accepted proposal to the planning graph, never to the imported graph.
+            plannedGraph.addEdge(proposedEdgeId, sourceId, targetId, weight);
+            hypotheticalEdgeIds.add(proposedEdgeId);
+            graphCanvas.setGraph(plannedGraph);
+            graphCanvas.setHypotheticalEdgeIds(hypotheticalEdgeIds);
             StringBuilder output = new StringBuilder();
             output.append("ANÁLISE DE CONEXÃO REDUNDANTE HIPOTÉTICA\n");
             output.append("========================================\n");
@@ -827,7 +869,8 @@ public final class NetResilienceApplication extends Application {
             output.append("Redução de pontes: ").append(result.getBridgeCountReduction()).append("\n");
             output.append("Redução de pontos de articulação: ")
                     .append(result.getArticulationPointCountReduction()).append("\n\n");
-            output.append("A infraestrutura original não foi alterada.\n");
+            output.append("A conexão foi adicionada à topologia planejada e será considerada nas próximas simulações.\n");
+            output.append("A infraestrutura original importada permanece inalterada.\n");
             output.append("A viabilidade física (capacidade, portas, orçamento óptico e rota de fibra) precisa ser validada separadamente.");
             showReportDialog("Análise de conexão hipotética", output.toString());
             statusLabel.setText("Análise concluída. A conexão avaliada é hipotética.");
