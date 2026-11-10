@@ -39,6 +39,7 @@ public class Node {
         this.id = id;
         this.label = label;
         this.dependentDevices = dependentDevices;
+        this.dependentDevicesProvided = true;
         this.x = x;
         this.y = y;
         this.hasPosition = true;
@@ -55,6 +56,7 @@ public class Node {
         this.id = id;
         this.label = label;
         this.dependentDevices = 0;
+        this.dependentDevicesProvided = false;
 
         this.x = x;
         this.y = y;
