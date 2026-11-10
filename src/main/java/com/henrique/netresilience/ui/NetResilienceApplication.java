@@ -789,10 +789,16 @@ public final class NetResilienceApplication extends Application {
             showError("Avaliação indisponível", "Importe uma rede antes de gerar o relatório.");
             return;
         }
+        String gatewayNodeId = sourceSelector.getValue();
+        if (gatewayNodeId == null || gatewayNodeId.isBlank()) {
+            showError("Gateway não selecionado", "Selecione o gateway de internet no campo de origem da análise de rota.");
+            return;
+        }
         try {
             String report = assessmentService.generateReport(
-                    graph, plannedGraph, unavailableNodeIds, unavailableEdgeIds, hypotheticalEdgeIds);
-            showReportDialog("Relatório de avaliação da rede", report);
+                    graph, plannedGraph, unavailableNodeIds, unavailableEdgeIds,
+                    hypotheticalEdgeIds, gatewayNodeId);
+            showReportDialog("Relatório integrado de resiliência", report);
             statusLabel.setText("Relatório de avaliação gerado.");
         } catch (IllegalArgumentException exception) {
             showError("Falha na avaliação", exception.getMessage());
