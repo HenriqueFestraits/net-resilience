@@ -71,6 +71,9 @@ public final class GraphCanvas extends Region {
     private Set<String> originalRouteEdgeIds = Set.of();
     private Set<String> affectedRouteEdgeIds = Set.of();
 
+    private String hypotheticalSourceId;
+    private String hypotheticalTargetId;
+
     private Consumer<Node> onNodeClicked = node -> {};
     private Consumer<Edge> onEdgeClicked = edge -> {};
 
@@ -95,6 +98,7 @@ public final class GraphCanvas extends Region {
     public void setGraph(Graph graph) {
 
         this.graph = graph;
+        clearHypotheticalConnection();
 
         redraw();
     }
@@ -121,6 +125,18 @@ public final class GraphCanvas extends Region {
         this.unavailableNodeIds = Set.copyOf(nodeIds);
         this.unavailableEdgeIds = Set.copyOf(edgeIds);
 
+        redraw();
+    }
+
+    public void setHypotheticalConnection(String sourceId, String targetId) {
+        this.hypotheticalSourceId = sourceId;
+        this.hypotheticalTargetId = targetId;
+        redraw();
+    }
+
+    public void clearHypotheticalConnection() {
+        this.hypotheticalSourceId = null;
+        this.hypotheticalTargetId = null;
         redraw();
     }
 
@@ -172,6 +188,7 @@ public final class GraphCanvas extends Region {
         );
 
         drawEdges(gc);
+        drawHypotheticalConnection(gc);
         drawNodes(gc, nodes);
     }
 
@@ -409,6 +426,50 @@ public final class GraphCanvas extends Region {
                     middleY - 14
             );
         }
+    }
+
+    private void drawHypotheticalConnection(GraphicsContext gc) {
+
+        if (hypotheticalSourceId == null || hypotheticalTargetId == null) {
+            return;
+        }
+
+        Point2D source = nodePositions.get(hypotheticalSourceId);
+        Point2D target = nodePositions.get(hypotheticalTargetId);
+        if (source == null || target == null) {
+            return;
+        }
+
+        double dx = target.getX() - source.getX();
+        double dy = target.getY() - source.getY();
+        double distance = Math.hypot(dx, dy);
+        if (distance == 0.0) {
+            return;
+        }
+
+        double offsetX = dx / distance * NODE_RADIUS;
+        double offsetY = dy / distance * NODE_RADIUS;
+
+        gc.setStroke(Color.web("#f59e0b"));
+        gc.setLineWidth(3.0);
+        gc.setLineDashes(9.0, 6.0);
+        gc.strokeLine(
+                source.getX() + offsetX,
+                source.getY() + offsetY,
+                target.getX() - offsetX,
+                target.getY() - offsetY
+        );
+        gc.setLineDashes();
+
+        double middleX = (source.getX() + target.getX()) / 2.0;
+        double middleY = (source.getY() + target.getY()) / 2.0;
+        gc.setFill(BACKGROUND_COLOR);
+        gc.fillRoundRect(middleX - 42, middleY - 34, 84, 18, 5, 5);
+        gc.setFill(Color.web("#fbbf24"));
+        gc.setFont(Font.font("System", FontWeight.BOLD, 10));
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.setTextBaseline(VPos.CENTER);
+        gc.fillText("ENLACE HIPOTÉTICO", middleX, middleY - 25);
     }
 
     private void drawNodes(
